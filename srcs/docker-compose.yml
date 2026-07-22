@@ -1,0 +1,31 @@
+name: miniExchange
+
+services:
+  postgres:
+    image: postgres:latest
+    container_name: miniExchange_postgres
+    env_file:
+      - .env
+    ports:
+      - "5433:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql
+  backend:
+    build:
+      context: ./backend
+      dockerfile: dockerfile
+    container_name: miniExchange_backend
+    env_file:
+      - .env
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/miniexchange
+      SPRING_DATASOURCE_USERNAME: ${POSTGRES_USER}
+      SPRING_DATASOURCE_PASSWORD: ${POSTGRES_PASSWORD}
+      SERVER_PORT: 8080
+    ports:
+      - "8080:8080"
+    depends_on:
+      - postgres
+
+volumes:
+  postgres_data:

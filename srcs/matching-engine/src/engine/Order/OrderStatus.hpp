@@ -1,0 +1,12 @@
+#ifndef ORDERSTATUS_HPP
+#define ORDERSTATUS_HPP
+
+enum class OrderStatus
+{
+	OPEN,
+	PARTIALLY_FILLED,
+	FILLED,
+	CANCELLED
+};
+
+#endif // ORDERSTATUS_HPP

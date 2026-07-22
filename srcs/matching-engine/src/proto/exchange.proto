@@ -1,0 +1,59 @@
+syntax = "proto3";
+
+package exchange;
+
+service ExchangeService
+{
+    rpc SubmitOrder(OrderRequest)
+        returns (OrderResponse);
+
+    rpc CancelOrder(CancelOrderRequest)
+        returns (CancelOrderResponse);
+
+    rpc GetOrder(GetOrderRequest)
+        returns (GetOrderResponse);
+}
+
+enum Side
+{
+    BUY = 0;
+    SELL = 1;
+}
+
+message OrderRequest
+{
+    string symbol = 1;
+    double price = 2;
+    uint64 quantity = 3;
+    Side side = 4;
+    string clientId = 5;
+}
+
+message OrderResponse
+{
+    bool accepted = 1;
+    string orderId = 2;
+    string message = 3;
+}
+
+message CancelOrderRequest
+{
+    string orderId = 1;
+}
+
+message CancelOrderResponse
+{
+    bool success = 1;
+    string message = 2;
+}
+
+message GetOrderRequest
+{
+    string orderId = 1;
+}
+
+message GetOrderResponse
+{
+    string orderId = 1;
+    string symbol = 2;
+}

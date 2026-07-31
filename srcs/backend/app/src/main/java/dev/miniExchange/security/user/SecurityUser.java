@@ -1,6 +1,6 @@
 package dev.miniExchange.security.user;
 
-import dev.miniExchange.user.User;
+import dev.miniExchange.user.entity.User;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;

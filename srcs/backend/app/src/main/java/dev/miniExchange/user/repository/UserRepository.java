@@ -1,5 +1,7 @@
-package dev.miniExchange.user;
+package dev.miniExchange.user.repository;
 import org.springframework.data.jpa.repository.JpaRepository;
+
+import dev.miniExchange.user.entity.User;
 
 import java.util.UUID;
 import java.util.Optional;

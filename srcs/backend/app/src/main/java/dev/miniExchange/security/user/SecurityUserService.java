@@ -1,7 +1,7 @@
 package dev.miniExchange.security.user;
 
-import dev.miniExchange.user.User;
-import dev.miniExchange.user.UserRepository;
+import dev.miniExchange.user.entity.User;
+import dev.miniExchange.user.repository.UserRepository;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;

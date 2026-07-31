@@ -6,8 +6,8 @@ import dev.miniExchange.auth.dto.SignupRequest;
 import dev.miniExchange.auth.dto.AuthResponse;
 import dev.miniExchange.auth.dto.LoginRequest;
 
-import dev.miniExchange.user.User;
-import dev.miniExchange.user.UserRepository;
+import dev.miniExchange.user.entity.User;
+import dev.miniExchange.user.repository.UserRepository;
 import dev.miniExchange.security.jwt.JwtService;
 
 

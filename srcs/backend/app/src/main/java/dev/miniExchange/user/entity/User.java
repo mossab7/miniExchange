@@ -1,8 +1,10 @@
-package dev.miniExchange.user;
+package dev.miniExchange.user.entity;
 
 import jakarta.persistence.*;
 import java.time.Instant;
 import java.util.UUID;
+
+import dev.miniExchange.user.Role;
 
 @Entity
 @Table(name = "users")
@@ -11,16 +13,17 @@ public class User {
     @GeneratedValue(strategy = GenerationType.UUID)
     private UUID id;
 
-    @Column(nullable = false, unique = true)
+    @Column(nullable = false, unique = true, length = 50)
     private String username;
     
-    @Column(nullable = false, unique = true)
+    @Column(nullable = false, unique = true, length = 255)
     private String email;
-    @Column(nullable = false)
+    @Column(nullable = false, length = 255)
     private String password;
 
-    @Column(nullable = false, updatable = false)
+    @Column(nullable = false, updatable = false, name = "created_at")
     private Instant createdAt = Instant.now();
+    @Column(nullable = false, name = "updated_at")
     private Instant updatedAt;
 
     private Boolean locked = false;

@@ -1,7 +1,6 @@
 package dev.miniExchange.asset.controller;
 
 import dev.miniExchange.asset.service.AssetService;
-import dev.miniExchange.asset.entity.Asset;
 import dev.miniExchange.asset.dto.CreateAssetRequest;
 import dev.miniExchange.asset.dto.UpdateAssetRequest;
 import dev.miniExchange.asset.dto.AssetResponse;
@@ -12,7 +11,6 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.http.ResponseEntity;
-import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.PathVariable;
 import jakarta.validation.Valid;
 

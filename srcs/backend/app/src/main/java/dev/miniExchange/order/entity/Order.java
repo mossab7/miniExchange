@@ -3,7 +3,7 @@ package dev.miniExchange.order.entity;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 
-@Entity
+@Entity(name = "orders")
 public class Order {
 
     @Id

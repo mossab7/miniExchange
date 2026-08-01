@@ -11,6 +11,7 @@ import dev.miniExchange.asset.mapper.AssetMapper;
 import dev.miniExchange.exception.notfound.assetNotFoundException;
 import dev.miniExchange.exception.conflict.assetAlreadyExistsException;
 
+
 import java.util.List;
 
 @Service
@@ -24,8 +25,9 @@ public class AssetService {
         this.assetMapper = assetMapper;
     }
     public AssetResponse create(CreateAssetRequest request) {
-        if (assetRepository.existsBySymbol(request.symbol())
-            .orElseThrow(() -> new assetAlreadyExistsException(request.symbol())));
+        if (assetRepository.existsBySymbol(request.symbol())) {
+            throw new assetAlreadyExistsException(request.symbol());
+        }
         Asset asset = assetMapper.toEntity(request);
         assetRepository.save(asset);
         return assetMapper.toResponse(asset);
@@ -33,7 +35,7 @@ public class AssetService {
 
     public AssetResponse getBySymbol(String symbol) {
         Asset asset = assetRepository.findBySymbol(symbol)
-            .orElseThrow(() -> new assetNotFoundException(symbol));
+                .orElseThrow(() -> new assetNotFoundException(symbol));
         return assetMapper.toResponse(asset);
     }
 
@@ -43,8 +45,9 @@ public class AssetService {
     }
 
     public AssetResponse update(String symbol, UpdateAssetRequest request) {
-        Asset existingAsset = assetRepository.findBySymbol(symbol)
-            .orElseThrow(() -> new assetNotFoundException(symbol));
+        if (!assetRepository.existsBySymbol(symbol)) {
+            throw new assetNotFoundException(symbol);
+        }
         Asset updatedAsset = assetMapper.toEntity(request);
         assetRepository.save(updatedAsset);
         return assetMapper.toResponse(updatedAsset);

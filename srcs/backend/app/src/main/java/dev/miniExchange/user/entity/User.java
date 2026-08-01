@@ -24,7 +24,7 @@ public class User {
     @Column(nullable = false, updatable = false, name = "created_at")
     private Instant createdAt = Instant.now();
     @Column(nullable = false, name = "updated_at")
-    private Instant updatedAt;
+    private Instant updatedAt = Instant.now();
 
     private Boolean locked = false;
     private Boolean enabled = true;

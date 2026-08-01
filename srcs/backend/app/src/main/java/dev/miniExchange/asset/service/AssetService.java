@@ -8,6 +8,9 @@ import dev.miniExchange.asset.entity.Asset;
 import dev.miniExchange.asset.repository.AssetRepository;
 import dev.miniExchange.asset.mapper.AssetMapper;
 
+import dev.miniExchange.exception.notfound.assetNotFoundException;
+import dev.miniExchange.exception.conflict.assetAlreadyExistsException;
+
 import java.util.List;
 
 @Service
@@ -21,19 +24,16 @@ public class AssetService {
         this.assetMapper = assetMapper;
     }
     public AssetResponse create(CreateAssetRequest request) {
-        if (assetRepository.existsBySymbol(request.symbol())) {
-            throw new IllegalArgumentException("Asset with symbol " + request.symbol() + " already exists");
-        }
+        if (assetRepository.existsBySymbol(request.symbol())
+            .orElseThrow(() -> new assetAlreadyExistsException(request.symbol())));
         Asset asset = assetMapper.toEntity(request);
         assetRepository.save(asset);
         return assetMapper.toResponse(asset);
     }
 
     public AssetResponse getBySymbol(String symbol) {
-        Asset asset = assetRepository.findBySymbol(symbol);
-        if (asset == null) {
-            throw new IllegalArgumentException("Asset with symbol " + symbol + " not found");
-        }
+        Asset asset = assetRepository.findBySymbol(symbol)
+            .orElseThrow(() -> new assetNotFoundException(symbol));
         return assetMapper.toResponse(asset);
     }
 
@@ -43,10 +43,8 @@ public class AssetService {
     }
 
     public AssetResponse update(String symbol, UpdateAssetRequest request) {
-        Asset existingAsset = assetRepository.findBySymbol(symbol);
-        if (existingAsset == null) {
-            throw new IllegalArgumentException("Asset with symbol " + symbol + " not found");
-        }
+        Asset existingAsset = assetRepository.findBySymbol(symbol)
+            .orElseThrow(() -> new assetNotFoundException(symbol));
         Asset updatedAsset = assetMapper.toEntity(request);
         assetRepository.save(updatedAsset);
         return assetMapper.toResponse(updatedAsset);

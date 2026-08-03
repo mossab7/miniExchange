@@ -13,6 +13,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PathVariable;
 import jakarta.validation.Valid;
+import java.util.UUID;
 
 import java.util.List;
 import java.net.URI;
@@ -38,6 +39,10 @@ public class AssetController
     @GetMapping("/{symbol}")
     public ResponseEntity<AssetResponse> getBySymbol(@PathVariable String symbol) {
         return ResponseEntity.ok(assetService.getBySymbol(symbol));
+    }
+    @GetMapping("/{uuid}")
+    public ResponseEntity<AssetResponse> getByUuid(@PathVariable UUID uuid) {
+        return ResponseEntity.ok(assetService.getByUuid(uuid));
     }
     @PostMapping("/{symbol}")
     public ResponseEntity<AssetResponse> update(@PathVariable String symbol, @Valid @RequestBody UpdateAssetRequest request) {

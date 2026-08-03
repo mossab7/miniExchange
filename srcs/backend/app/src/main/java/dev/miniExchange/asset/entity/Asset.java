@@ -2,18 +2,31 @@ package dev.miniExchange.asset.entity;
 
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
-
+import jakarta.persistence.Table;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
+import jakarta.persistence.SequenceGenerator;
+import java.util.UUID;
 
 import jakarta.persistence.Column;
 
 @Entity
+@Table(name = "assets")
 public class Asset {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @GeneratedValue(
+        strategy = GenerationType.SEQUENCE,
+        generator="asset_seq"
+    )
+    @SequenceGenerator(
+        name="asset_seq",
+        sequenceName="asset_sequence",
+        allocationSize=50
+    )
     private Long id;
+    @Column(nullable = false, unique = true, updatable = false)
+    private UUID uuid = UUID.randomUUID();
     @Column(unique = true, nullable = false, length = 4)
     private String symbol;
     @Column(unique = true, nullable = false, length = 20)
@@ -24,7 +37,6 @@ public class Asset {
     private boolean isActive;
 
     protected Asset() {
-        // Default constructor for JPA
     }
 
     public Asset(String symbol, String name, int decimalPlaces, boolean isActive) {

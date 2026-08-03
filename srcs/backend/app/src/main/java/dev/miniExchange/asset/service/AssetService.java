@@ -52,4 +52,9 @@ public class AssetService {
         assetRepository.save(updatedAsset);
         return assetMapper.toResponse(updatedAsset);
     }
+    public AssetResponse getByUuid(java.util.UUID uuid) {
+        Asset asset = assetRepository.findByUuid(uuid)
+                .orElseThrow(() -> new assetNotFoundException(uuid.toString()));
+        return assetMapper.toResponse(asset);
+    }
 }

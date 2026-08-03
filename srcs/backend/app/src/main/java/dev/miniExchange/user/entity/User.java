@@ -3,15 +3,21 @@ package dev.miniExchange.user.entity;
 import jakarta.persistence.*;
 import java.time.Instant;
 import java.util.UUID;
-
 import dev.miniExchange.user.Role;
 
 @Entity
 @Table(name = "users")
 public class User {
     @Id
-    @GeneratedValue(strategy = GenerationType.UUID)
-    private UUID id;
+    @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "user_seq")
+    @SequenceGenerator(
+        name = "user_seq",
+        sequenceName = "user_sequence",
+        allocationSize = 50
+    )
+    private Long id;
+    @Column(nullable = false, unique = true, updatable = false)
+    private UUID uuid = UUID.randomUUID();
 
     @Column(nullable = false, unique = true, length = 50)
     private String username;
@@ -70,5 +76,11 @@ public class User {
     @PreUpdate
     protected void onUpdate() {
         updatedAt = Instant.now();
+    }
+    public UUID getUuid() {
+        return uuid;
+    }
+    public Long getId() {
+        return id;
     }
 }

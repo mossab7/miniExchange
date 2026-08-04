@@ -66,6 +66,10 @@ public class Position {
         return asset.getId();
     }
 
+    public Asset getAsset() {
+        return asset;
+    }
+
     public String getAssetSymbol() {
         return asset.getSymbol();
     }

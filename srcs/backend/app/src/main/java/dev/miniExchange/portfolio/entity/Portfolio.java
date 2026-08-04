@@ -42,7 +42,28 @@ public class Portfolio {
     @Column(nullable = false)
     private BigInteger balance = BigInteger.ZERO;
 
+    public UUID getUuid() {
+        return uuid;
+    }
     public Long getId() {
         return id;
     }
+
+    public User getUser() {
+        return user;
+    }
+
+    public BigInteger getBalance() {
+        return balance;
+    }
+
+    public UUID getUserUuid() {
+        return user.getUuid();
+    }
+
+    public void updateBalance(BigInteger newBalance) {
+        this.balance = newBalance;
+        this.updatedAt = LocalDateTime.now();
+    }
+
 }

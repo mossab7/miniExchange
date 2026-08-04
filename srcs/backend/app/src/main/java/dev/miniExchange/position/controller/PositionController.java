@@ -18,9 +18,9 @@ public class PositionController {
     public PositionController(PositionService positionService) {
         this.positionService = positionService;
     }
-    @GetMapping("/{assetId}/{portfolioId}")
-    public ResponseEntity<PositionResponse> getPosition(@PathVariable Long assetId, @PathVariable Long portfolioId) {
-        PositionResponse position = positionService.getPosition(assetId, portfolioId);
+    @GetMapping("/{symbol}")
+    public ResponseEntity<PositionResponse> getPosition(@PathVariable String symbol) {
+        PositionResponse position = positionService.getPosition(symbol);
         return ResponseEntity.ok(position);
     }
     @GetMapping

@@ -4,8 +4,7 @@ import dev.miniExchange.exception.base.ApiException;
 import org.springframework.http.HttpStatus;
 
 public class positionNotFoundException extends ApiException {
-    public positionNotFoundException(Long assetId, Long portfolioId) {
-        super("Position not found for assetId: " + assetId + " and portfolioId: " + portfolioId,
-                HttpStatus.NOT_FOUND);
+    public positionNotFoundException(String symbol) {
+        super("Position not found for symbol: " + symbol, HttpStatus.NOT_FOUND);
     }
 }

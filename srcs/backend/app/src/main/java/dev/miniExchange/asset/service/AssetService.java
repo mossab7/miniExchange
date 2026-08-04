@@ -13,6 +13,7 @@ import dev.miniExchange.exception.conflict.assetAlreadyExistsException;
 
 
 import java.util.List;
+import java.util.UUID;
 
 @Service
 public class AssetService {
@@ -52,7 +53,7 @@ public class AssetService {
         assetRepository.save(updatedAsset);
         return assetMapper.toResponse(updatedAsset);
     }
-    public AssetResponse getByUuid(java.util.UUID uuid) {
+    public AssetResponse getByUuid(UUID uuid) {
         Asset asset = assetRepository.findByUuid(uuid)
                 .orElseThrow(() -> new assetNotFoundException(uuid.toString()));
         return assetMapper.toResponse(asset);

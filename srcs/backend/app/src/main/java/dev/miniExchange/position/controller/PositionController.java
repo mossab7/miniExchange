@@ -8,6 +8,8 @@ import dev.miniExchange.position.dto.PositionResponse;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PathVariable;
+import dev.miniExchange.position.mapper.PositionMapper;
+import java.util.stream.Collectors;
 
 import java.util.List;
 
@@ -20,12 +22,14 @@ public class PositionController {
     }
     @GetMapping("/{symbol}")
     public ResponseEntity<PositionResponse> getPosition(@PathVariable String symbol) {
-        PositionResponse position = positionService.getPosition(symbol);
+        PositionResponse position = PositionMapper.toResponse(positionService.getPosition(symbol));
         return ResponseEntity.ok(position);
     }
     @GetMapping
     public ResponseEntity<List<PositionResponse>> getAllPositions() {
-        List<PositionResponse> positions = positionService.getAllPositions();
+        List<PositionResponse> positions = positionService.getAllPositions().stream()
+                .map(PositionMapper::toResponse)
+                .collect(Collectors.toList());
         return ResponseEntity.ok(positions);
     }
 }

@@ -15,6 +15,8 @@ import org.springframework.web.bind.annotation.PathVariable;
 import jakarta.validation.Valid;
 import java.util.UUID;
 
+import dev.miniExchange.asset.mapper.AssetMapper;
+
 import java.util.List;
 import java.net.URI;
 
@@ -28,25 +30,25 @@ public class AssetController
     }
     @PostMapping
     public ResponseEntity<AssetResponse> create(@Valid @RequestBody CreateAssetRequest request) {
-        AssetResponse asset = assetService.create(request);
+        AssetResponse asset = AssetMapper.toResponse(assetService.create(request));
         URI location = URI.create(String.format("/assets/%s", asset.symbol()));
         return ResponseEntity.created(location).body(asset);
     }
     @GetMapping
     public ResponseEntity<List<AssetResponse>> getAll() {
-        return ResponseEntity.ok(assetService.getAll());
+        return ResponseEntity.ok(assetService.getAll().stream().map(AssetMapper::toResponse).toList());
     }
     @GetMapping("/{symbol}")
     public ResponseEntity<AssetResponse> getBySymbol(@PathVariable String symbol) {
-        return ResponseEntity.ok(assetService.getBySymbol(symbol));
+        return ResponseEntity.ok(AssetMapper.toResponse(assetService.getBySymbol(symbol)));
     }
     @GetMapping("/{uuid}")
     public ResponseEntity<AssetResponse> getByUuid(@PathVariable UUID uuid) {
-        return ResponseEntity.ok(assetService.getByUuid(uuid));
+        return ResponseEntity.ok(AssetMapper.toResponse(assetService.getByUuid(uuid)));
     }
     @PostMapping("/{symbol}")
     public ResponseEntity<AssetResponse> update(@PathVariable String symbol, @Valid @RequestBody UpdateAssetRequest request) {
-        AssetResponse updatedAsset = assetService.update(symbol, request);
+        AssetResponse updatedAsset = AssetMapper.toResponse(assetService.update(symbol, request));
         return ResponseEntity.ok(updatedAsset);
     }
 }

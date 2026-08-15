@@ -3,40 +3,46 @@ package dev.miniExchange.position.service;
 import org.springframework.stereotype.Service;
 import dev.miniExchange.position.repository.PositionRepository;
 import dev.miniExchange.position.entity.Position;
-import dev.miniExchange.position.dto.PositionResponse;
-import dev.miniExchange.exception.notfound.positionNotFoundException;
+import dev.miniExchange.position.exceptions.PositionNotFoundException;
 import dev.miniExchange.security.user.CurrentUser;
-import dev.miniExchange.position.mapper.PositionMapper;
 
 
 import java.util.List;
 import java.util.stream.Collectors;
+import java.math.BigInteger;
+import java.util.UUID;
 
 @Service
 public class PositionService {
     private final PositionRepository positionRepository;
     private final CurrentUser currentUser;
-    private final PositionMapper positionMapper;
 
-    public PositionService(PositionRepository positionRepository, CurrentUser currentUser, PositionMapper positionMapper) {
+    public PositionService(PositionRepository positionRepository, CurrentUser currentUser) {
         this.positionRepository = positionRepository;
         this.currentUser = currentUser;
-        this.positionMapper = positionMapper;
     }
 
-    public PositionResponse getPosition(String symbol) {
+    public Position getPosition(String symbol) {
         
         Position position = positionRepository.findByPortfolioUserIdAndAssetSymbol(currentUser.getId(), symbol)
-                .orElseThrow(() -> new positionNotFoundException(symbol));
-        return positionMapper.toResponse(position);
+                .orElseThrow(() -> new PositionNotFoundException(symbol));
+        return position;
  
     }
     
-    public List<PositionResponse> getAllPositions() {
+    public List<Position> getAllPositions() {
         Long userId = currentUser.getId();
         return positionRepository.findByPortfolioUserId(userId).stream()
-                .map(positionMapper::toResponse)
                 .collect(Collectors.toList());
     }
 
+    public Position getPositionByPortfolioIdAndAssetSymbol(Long portfolioId, String assetSymbol) {
+        return positionRepository.findByPortfolioIdAndAssetSymbol(portfolioId, assetSymbol)
+                .orElseThrow(() -> new PositionNotFoundException(assetSymbol));
+    }
+    public BigInteger getQuantityByPortfolioIdAndAssetSymbol(UUID portfolioId, String assetSymbol) {
+        Position position = positionRepository.findByPortfolioIdAndAssetSymbol(portfolioId, assetSymbol)
+                .orElseThrow(() -> new PositionNotFoundException(assetSymbol));
+        return position.getQuantity();
+    }
 }

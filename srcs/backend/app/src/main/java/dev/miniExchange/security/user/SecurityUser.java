@@ -39,7 +39,7 @@ public class SecurityUser implements UserDetails {
 
     @Override
     public boolean isAccountNonLocked() {
-        return !user.is_locked();
+        return !user.isLocked();
     }
 
     @Override
@@ -49,7 +49,7 @@ public class SecurityUser implements UserDetails {
 
     @Override
     public boolean isEnabled() {
-        return user.is_enabled(); 
+        return user.isEnabled(); 
     }
 
     public UUID getUuid() {

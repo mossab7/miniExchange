@@ -2,6 +2,7 @@ package dev.miniExchange.asset.entity;
 
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
+import jakarta.persistence.PrePersist;
 import jakarta.persistence.Table;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
@@ -9,6 +10,7 @@ import jakarta.persistence.SequenceGenerator;
 import java.util.UUID;
 
 import jakarta.persistence.Column;
+
 
 @Entity
 @Table(name = "assets")
@@ -26,7 +28,13 @@ public class Asset {
     )
     private Long id;
     @Column(nullable = false, unique = true, updatable = false)
-    private UUID uuid = UUID.randomUUID();
+    private UUID uuid;
+    @PrePersist
+    public void generateUuid() {
+        if (uuid == null) {
+            uuid = UUID.randomUUID();
+        }
+    }
     @Column(unique = true, nullable = false, length = 4)
     private String symbol;
     @Column(unique = true, nullable = false, length = 20)
@@ -64,5 +72,8 @@ public class Asset {
 
     public boolean isActive() {
         return isActive;
+    }
+    public UUID getUuid() {
+        return uuid;
     }
 }

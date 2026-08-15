@@ -1,0 +1,47 @@
+spring:
+  datasource:
+    url: ${DB_URL}
+    username: ${DB_USERNAME}
+    password: ${DB_PASSWORD}
+    hikari:
+      maximum-pool-size: 20
+      minimum-idle: 5
+      connection-timeout: 30000
+      idle-timeout: 600000
+      max-lifetime: 1800000
+
+  jpa:
+    hibernate:
+      ddl-auto: validate
+
+    properties:
+      hibernate:
+        format_sql: false
+        jdbc:
+          batch_size: 20
+          fetch_size: 50
+
+    show-sql: false
+
+jwt:
+  secret: ${JWT_SECRET}
+  expirationMs: 3600000
+
+logging:
+  level:
+    root: WARN
+    dev.miniExchange: INFO
+  pattern:
+    console: "%d{ISO8601} %thread %level %logger{36} - %msg%n"
+    file: "%d{ISO8601} %thread %level %logger{36} - %msg%n"
+  file:
+    name: logs/miniexchange.log
+    max-size: 10MB
+    max-history: 30
+
+server:
+  ssl:
+    enabled: true
+    key-store: ${SSL_KEYSTORE_PATH}
+    key-store-password: ${SSL_KEYSTORE_PASSWORD}
+    key-store-type: PKCS12

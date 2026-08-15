@@ -8,10 +8,12 @@ import jakarta.persistence.Table;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.JoinColumn;
+import jakarta.persistence.PrePersist;
+import jakarta.persistence.PreUpdate;
 
 import dev.miniExchange.user.entity.User;
 
-import java.time.LocalDateTime;
+import java.time.Instant;
 import java.math.BigInteger;
 
 import jakarta.persistence.SequenceGenerator;
@@ -34,10 +36,10 @@ public class Portfolio {
     private User user;
 
     @Column(nullable = false, updatable = false, name = "created_at")
-    private LocalDateTime createdAt = LocalDateTime.now();
+    private Instant createdAt = Instant.now();
 
     @Column(nullable = false, updatable = false, name = "updated_at")
-    private LocalDateTime updatedAt = LocalDateTime.now();
+    private Instant updatedAt = Instant.now();
 
     @Column(nullable = false)
     private BigInteger balance = BigInteger.ZERO;
@@ -63,7 +65,25 @@ public class Portfolio {
 
     public void updateBalance(BigInteger newBalance) {
         this.balance = newBalance;
-        this.updatedAt = LocalDateTime.now();
+        this.updatedAt = Instant.now();
     }
 
+    public Instant getCreatedAt() {
+        return createdAt;
+    }
+
+    public Instant getUpdatedAt() {
+        return updatedAt;
+    }
+
+    @PrePersist
+    protected void onCreate() {
+        this.createdAt = Instant.now();
+        this.updatedAt = Instant.now();
+    }
+
+    @PreUpdate
+    protected void onUpdate() {
+        this.updatedAt = Instant.now();
+    }
 }

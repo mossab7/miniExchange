@@ -15,7 +15,8 @@ import java.util.function.Function;
 @Component
 public class JwtService {
 
-    private String jwtSecret ="verylongassshitineedtowriteforthisbullshittoworkfuckmylife";
+    @Value("${jwt.secret}")
+    private String jwtSecret;
 
     @Value("${jwt.expirationMs:900000}") // default 15 minutes
     private long jwtExpirationMs;

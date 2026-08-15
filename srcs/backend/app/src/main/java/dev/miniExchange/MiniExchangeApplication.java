@@ -4,10 +4,10 @@ import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 
 @SpringBootApplication
-public class miniExchangeApplication {
+public class MiniExchangeApplication {
 
     public static void main(String[] args) {
-        SpringApplication.run(miniExchangeApplication.class, args);
+        SpringApplication.run(MiniExchangeApplication.class, args);
     }
 
 }

@@ -14,6 +14,7 @@ import jakarta.persistence.GenerationType;
 import jakarta.persistence.SequenceGenerator;
 import jakarta.persistence.UniqueConstraint;
 import jakarta.persistence.FetchType;
+import jakarta.persistence.JoinColumn;
 import java.util.UUID;
 @Entity
 @Table(name = "positions",
@@ -38,11 +39,11 @@ public class Position {
     @Column(nullable = false, unique = true, updatable = false)
     private UUID uuid = UUID.randomUUID();
 
-    @Column(nullable = false, name = "asset_id")
+    @JoinColumn(nullable = false, name = "asset_id")
     @ManyToOne(fetch = FetchType.LAZY)
     private Asset asset;
 
-    @Column(nullable = false, name = "portfolio_id")
+    @JoinColumn(nullable = false, name = "portfolio_id")
     @ManyToOne(fetch = FetchType.LAZY)
     private Portfolio portfolio;
 

@@ -46,10 +46,10 @@ public class User {
         this.email = email;
         this.password = password;
     }
-    public boolean is_enabled() {
+    public boolean isEnabled() {
         return enabled;
     }
-    public boolean is_locked() {
+    public boolean isLocked() {
         return locked;
     }
     public String getUsername() {
@@ -72,6 +72,11 @@ public class User {
     }
     public Instant getUpdatedAt() {
         return updatedAt;
+    }
+    @PrePersist
+    protected void onCreate() {
+        this.createdAt = Instant.now();
+        this.updatedAt = Instant.now();
     }
     @PreUpdate
     protected void onUpdate() {

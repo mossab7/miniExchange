@@ -8,31 +8,33 @@ import dev.miniExchange.portfolio.service.PortfolioService;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 
-import dev.miniExchange.security.user.CurrentUser;
-import dev.miniExchange.portfolio.entity.Portfolio;
+import dev.miniExchange.portfolio.mapper.PortfolioMapper;
 import dev.miniExchange.portfolio.dto.PortfolioResponse;
-import dev.miniExchange.portfolio.Mapper.PortfolioMapper;
+
+import dev.miniExchange.portfolio.dto.UpdateBalanceRequest;
+import org.springframework.web.bind.annotation.RequestBody;
+import jakarta.validation.Valid;
+import dev.miniExchange.portfolio.entity.Portfolio;
+import java.util.UUID;
 
 @RestController
 @RequestMapping("/portfolios")
 public class PortfolioController {
     private final PortfolioService portfolioService;
-    private final CurrentUser currentUser;
-    private final PortfolioMapper portfolioMapper;
-    public PortfolioController(PortfolioService portfolioService, CurrentUser currentUser, PortfolioMapper portfolioMapper) {
+    public PortfolioController(PortfolioService portfolioService) {
         this.portfolioService = portfolioService;
-        this.currentUser = currentUser;
-        this.portfolioMapper = portfolioMapper;
     }
-    @GetMapping
-    public ResponseEntity<PortfolioResponse> getPortfolio() {
-        Portfolio portfolio = this.portfolioService.getPortfolioByUserId(currentUser.getId());
-        return ResponseEntity.ok(portfolioMapper.toResponse(portfolio));
+    @GetMapping("/{portfolioId}")
+    public ResponseEntity<PortfolioResponse> getPortfolio(@PathVariable UUID portfolioId) {
+        Portfolio portfolio = this.portfolioService.getPortfolioByUserId();
+        return ResponseEntity.ok(PortfolioMapper.toResponse(portfolio));
     }
+
+    @GetMapping("")
     // this not a good practice to update balance directly, but for a learning  project let's do it for now, in a real production project we should have a transaction service to handle this
-    @PostMapping("/balance/{balance}")
-    public ResponseEntity<Void> updateBalance(@PathVariable java.math.BigInteger balance) {
-        portfolioService.updateBalance(currentUser.getId(), balance);
+    @PostMapping("/{portfolioId}/balance")
+    public ResponseEntity<Void> updateBalance(@PathVariable UUID portfolioId, @RequestBody @Valid UpdateBalanceRequest request) {
+        portfolioService.updateBalance(portfolioId, request);
         return ResponseEntity.ok().build();
     }
 }

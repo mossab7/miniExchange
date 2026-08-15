@@ -1,0 +1,9 @@
+package dev.miniExchange.asset.exceptions;
+
+import dev.miniExchange.common.exception.ResourceNotFoundException;
+
+public class AssetNotFoundException extends ResourceNotFoundException {
+    public AssetNotFoundException(String message) {
+        super("asset " + message + " not found");
+    }
+}

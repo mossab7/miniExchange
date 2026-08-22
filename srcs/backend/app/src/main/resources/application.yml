@@ -1,17 +1,11 @@
 spring:
-  datasource:
-    url: jdbc:postgresql://localhost:5433/miniexchange
-    username: postgres
-    password: postgres
+  profiles:
+    active: dev
+  application:
+    name: miniExchange
 
   jpa:
-    hibernate:
-      ddl-auto: update
+    open-in-view: false
 
-    properties:
-      hibernate:
-        format_sql: true
-
-    show-sql: true
-
-jwt.secret: ${JWT_SECRET}
+jwt:
+  expirationMs: ${jwt.expirationMs:900000}

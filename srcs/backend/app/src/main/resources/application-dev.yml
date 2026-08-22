@@ -1,0 +1,30 @@
+spring:
+  datasource:
+    url: jdbc:postgresql://localhost:5433/miniexchange
+    username: postgres
+    password: postgres
+
+  jpa:
+    hibernate:
+      ddl-auto: update
+
+    properties:
+      hibernate:
+        format_sql: true
+
+    show-sql: true
+
+  devtools:
+    restart:
+      enabled: true
+
+jwt:
+  secret: dev-secret-key-this-is-only-for-local-development-do-not-use-in-production
+  expirationMs: 900000
+
+logging:
+  level:
+    root: INFO
+    dev.miniExchange: DEBUG
+    org.springframework.web: DEBUG
+    org.hibernate.SQL: DEBUG

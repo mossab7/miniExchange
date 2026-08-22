@@ -5,21 +5,20 @@ import dev.miniExchange.asset.entity.Asset;
 import dev.miniExchange.asset.dto.CreateAssetRequest;
 import dev.miniExchange.asset.dto.UpdateAssetRequest;
 
-import org.springframework.stereotype.Component;
 
-@Component
 public class AssetMapper {
 
-    public AssetResponse toResponse(Asset asset) {
+    static public AssetResponse toResponse(Asset asset) {
         return new AssetResponse(
                 asset.getSymbol(),
                 asset.getName(),
                 asset.getDecimalPlaces(),
-                asset.isActive()
+                asset.isActive(),
+                asset.getUuid()
         );
     }
 
-    public Asset toEntity(CreateAssetRequest request) {
+    static public Asset toEntity(CreateAssetRequest request) {
         return new Asset(
                 request.symbol(),
                 request.name(),
@@ -28,7 +27,7 @@ public class AssetMapper {
         );
     }
 
-    public Asset toEntity(UpdateAssetRequest request) {
+    static public Asset toEntity(UpdateAssetRequest request) {
         return new Asset(
                 request.symbol(),
                 request.name(),

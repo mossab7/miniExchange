@@ -4,44 +4,59 @@ import dev.miniExchange.asset.service.AssetService;
 import dev.miniExchange.asset.dto.CreateAssetRequest;
 import dev.miniExchange.asset.dto.UpdateAssetRequest;
 import dev.miniExchange.asset.dto.AssetResponse;
+import dev.miniExchange.asset.mapper.AssetMapper;
 
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import jakarta.validation.Valid;
 
-import java.util.List;
 import java.net.URI;
+import java.util.List;
+import java.util.UUID;
 
 @RestController
-@RequestMapping("/assets")
-public class AssetController 
-{
+@RequestMapping("/api/assets")
+public class AssetController {
     private final AssetService assetService;
+
     public AssetController(AssetService assetService) {
         this.assetService = assetService;
     }
+
     @PostMapping
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<AssetResponse> create(@Valid @RequestBody CreateAssetRequest request) {
-        AssetResponse asset = assetService.create(request);
-        URI location = URI.create(String.format("/assets/%s", asset.symbol()));
+        AssetResponse asset = AssetMapper.toResponse(assetService.create(request));
+        URI location = URI.create(String.format("/api/assets/%s", asset.symbol()));
         return ResponseEntity.created(location).body(asset);
     }
+
     @GetMapping
     public ResponseEntity<List<AssetResponse>> getAll() {
-        return ResponseEntity.ok(assetService.getAll());
+        return ResponseEntity.ok(assetService.getAll().stream().map(AssetMapper::toResponse).toList());
     }
+
     @GetMapping("/{symbol}")
     public ResponseEntity<AssetResponse> getBySymbol(@PathVariable String symbol) {
-        return ResponseEntity.ok(assetService.getBySymbol(symbol));
+        return ResponseEntity.ok(AssetMapper.toResponse(assetService.getBySymbol(symbol)));
     }
-    @PostMapping("/{symbol}")
+
+    @GetMapping("/id/{uuid}")
+    public ResponseEntity<AssetResponse> getByUuid(@PathVariable UUID uuid) {
+        return ResponseEntity.ok(AssetMapper.toResponse(assetService.getByUuid(uuid)));
+    }
+
+    @PutMapping("/{symbol}")
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<AssetResponse> update(@PathVariable String symbol, @Valid @RequestBody UpdateAssetRequest request) {
-        AssetResponse updatedAsset = assetService.update(symbol, request);
+        AssetResponse updatedAsset = AssetMapper.toResponse(assetService.update(symbol, request));
         return ResponseEntity.ok(updatedAsset);
     }
 }

@@ -1,55 +1,64 @@
 package dev.miniExchange.asset.service;
 
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
 import dev.miniExchange.asset.dto.CreateAssetRequest;
 import dev.miniExchange.asset.dto.UpdateAssetRequest;
-import dev.miniExchange.asset.dto.AssetResponse;
 import dev.miniExchange.asset.entity.Asset;
+import dev.miniExchange.asset.exceptions.AssetAlreadyExistsException;
+import dev.miniExchange.asset.exceptions.AssetNotFoundException;
 import dev.miniExchange.asset.repository.AssetRepository;
 import dev.miniExchange.asset.mapper.AssetMapper;
 
-import dev.miniExchange.exception.notfound.assetNotFoundException;
-import dev.miniExchange.exception.conflict.assetAlreadyExistsException;
-
-
 import java.util.List;
+import java.util.UUID;
 
 @Service
 public class AssetService {
 
     private final AssetRepository assetRepository;
-    private final AssetMapper assetMapper;
 
-    public AssetService(AssetRepository assetRepository, AssetMapper assetMapper) {
+    public AssetService(AssetRepository assetRepository) {
         this.assetRepository = assetRepository;
-        this.assetMapper = assetMapper;
     }
-    public AssetResponse create(CreateAssetRequest request) {
+
+    @Transactional
+    public Asset create(CreateAssetRequest request) {
         if (assetRepository.existsBySymbol(request.symbol())) {
-            throw new assetAlreadyExistsException(request.symbol());
+            throw new AssetAlreadyExistsException(request.symbol());
         }
-        Asset asset = assetMapper.toEntity(request);
-        assetRepository.save(asset);
-        return assetMapper.toResponse(asset);
+        Asset asset = AssetMapper.toEntity(request);
+        return assetRepository.save(asset);
     }
 
-    public AssetResponse getBySymbol(String symbol) {
+    public Asset getBySymbol(String symbol) {
+        return assetRepository.findBySymbol(symbol)
+                .orElseThrow(() -> new AssetNotFoundException(symbol));
+    }
+
+    public List<Asset> getAll() {
+        return assetRepository.findAll();
+    }
+
+    @Transactional
+    public Asset update(String symbol, UpdateAssetRequest request) {
         Asset asset = assetRepository.findBySymbol(symbol)
-                .orElseThrow(() -> new assetNotFoundException(symbol));
-        return assetMapper.toResponse(asset);
+                .orElseThrow(() -> new AssetNotFoundException(symbol));
+
+        asset.setName(request.name());
+        asset.setDecimalPlaces(request.decimalPlaces());
+        asset.setActive(request.isActive());
+
+        return assetRepository.save(asset);
     }
 
-    public List<AssetResponse> getAll() {
-        List<Asset> assets = assetRepository.findAll();
-        return assets.stream().map(assetMapper::toResponse).toList();
+    public Asset getByUuid(UUID uuid) {
+        return assetRepository.findByUuid(uuid)
+                .orElseThrow(() -> new AssetNotFoundException(uuid.toString()));
     }
 
-    public AssetResponse update(String symbol, UpdateAssetRequest request) {
-        if (!assetRepository.existsBySymbol(symbol)) {
-            throw new assetNotFoundException(symbol);
-        }
-        Asset updatedAsset = assetMapper.toEntity(request);
-        assetRepository.save(updatedAsset);
-        return assetMapper.toResponse(updatedAsset);
+    public Asset getReference(Long assetId) {
+        return assetRepository.getReferenceById(assetId);
     }
 }

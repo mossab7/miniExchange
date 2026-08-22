@@ -1,7 +1,8 @@
 package dev.miniExchange.amountConvertor.exceptions;
 
-import dev.miniExchange.common.exception.BaseExchangeException;
 import org.springframework.http.HttpStatus;
+
+import dev.miniExchange.common.exceptions.BaseExchangeException;
 
 public class InvalidAmountException extends BaseExchangeException {
     public InvalidAmountException(String message) {

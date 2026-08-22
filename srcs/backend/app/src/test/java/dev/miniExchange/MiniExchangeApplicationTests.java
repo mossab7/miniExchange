@@ -1,0 +1,14 @@
+package dev.miniExchange;
+
+import org.junit.jupiter.api.Test;
+import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.test.context.ActiveProfiles;
+
+@SpringBootTest
+@ActiveProfiles("test")
+class MiniExchangeApplicationTests {
+
+    @Test
+    void contextLoads() {
+    }
+}

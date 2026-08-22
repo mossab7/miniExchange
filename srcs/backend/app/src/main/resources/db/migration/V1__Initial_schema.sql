@@ -11,7 +11,7 @@ CREATE SEQUENCE balance_transaction_sequence START WITH 1 INCREMENT BY 50;
 
 -- Users table
 CREATE TABLE users (
-    id BIGINT PRIMARY KEY DEFAULT nextval('user_sequence'),
+    id BIGINT DEFAULT nextval('user_sequence') PRIMARY KEY,
     uuid UUID NOT NULL UNIQUE,
     username VARCHAR(50) NOT NULL UNIQUE,
     email VARCHAR(255) NOT NULL UNIQUE,
@@ -29,7 +29,7 @@ CREATE INDEX idx_users_uuid ON users(uuid);
 
 -- Assets table
 CREATE TABLE assets (
-    id BIGINT PRIMARY KEY DEFAULT nextval('asset_sequence'),
+    id BIGINT DEFAULT nextval('asset_sequence') PRIMARY KEY,
     uuid UUID NOT NULL UNIQUE,
     symbol VARCHAR(4) NOT NULL UNIQUE,
     name VARCHAR(20) NOT NULL UNIQUE,
@@ -42,7 +42,7 @@ CREATE INDEX idx_assets_uuid ON assets(uuid);
 
 -- Portfolios table
 CREATE TABLE portfolios (
-    id BIGINT PRIMARY KEY DEFAULT nextval('portfolio_sequence'),
+    id BIGINT DEFAULT nextval('portfolio_sequence') PRIMARY KEY,
     uuid UUID NOT NULL UNIQUE,
     user_id BIGINT NOT NULL UNIQUE REFERENCES users(id) ON DELETE CASCADE,
     created_at TIMESTAMP NOT NULL,
@@ -55,7 +55,7 @@ CREATE INDEX idx_portfolios_uuid ON portfolios(uuid);
 
 -- Positions table
 CREATE TABLE positions (
-    id BIGINT PRIMARY KEY DEFAULT nextval('position_sequence'),
+    id BIGINT DEFAULT nextval('position_sequence') PRIMARY KEY,
     uuid UUID NOT NULL UNIQUE,
     asset_id BIGINT NOT NULL REFERENCES assets(id) ON DELETE RESTRICT,
     portfolio_id BIGINT NOT NULL REFERENCES portfolios(id) ON DELETE CASCADE,
@@ -69,7 +69,7 @@ CREATE INDEX idx_positions_uuid ON positions(uuid);
 
 -- Orders table
 CREATE TABLE orders (
-    id BIGINT PRIMARY KEY DEFAULT nextval('order_id_seq'),
+    id BIGINT DEFAULT nextval('order_id_seq') PRIMARY KEY,
     uuid UUID NOT NULL UNIQUE,
     side VARCHAR(20) NOT NULL,
     asset_id BIGINT NOT NULL REFERENCES assets(id) ON DELETE RESTRICT,
@@ -93,7 +93,7 @@ CREATE INDEX idx_orders_created_at ON orders(created_at);
 
 -- Balance Transactions table
 CREATE TABLE balance_transactions (
-    id BIGINT PRIMARY KEY DEFAULT nextval('balance_transaction_sequence'),
+    id BIGINT DEFAULT nextval('balance_transaction_sequence') PRIMARY KEY,
     uuid UUID NOT NULL UNIQUE,
     amount NUMERIC(38, 0) NOT NULL,
     type VARCHAR(50) NOT NULL,

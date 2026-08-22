@@ -3,7 +3,15 @@
 FROM gradle:9.1-jdk25 AS builder
 WORKDIR /app
 COPY . .
-RUN chmod +x ./gradlew && ./gradlew :app:bootJar --no-daemon
+
+# Set RUN_TESTS=true to execute tests during build (used by `make test`)
+ARG RUN_TESTS=false
+RUN chmod +x ./gradlew && \
+    if [ "$RUN_TESTS" = "true" ]; then \
+        ./gradlew :app:test --tests "*MiniExchangeApplicationTests" --stacktrace --scan --info :app:bootJar --no-daemon ; \
+    else \
+        ./gradlew :app:bootJar --no-daemon; \
+    fi
 
 
 #run

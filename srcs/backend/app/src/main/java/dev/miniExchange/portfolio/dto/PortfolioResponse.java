@@ -1,21 +1,18 @@
 package dev.miniExchange.portfolio.dto;
 
-import java.math.BigInteger;
-import java.util.UUID;
+import java.math.BigDecimal;
 import java.time.Instant;
-
-import jakarta.validation.constraints.NotBlank;
+import java.util.UUID;
 
 public record PortfolioResponse(
-    @NotBlank
     UUID portfolioId,
-    @NotBlank
     UUID userId,
-    @NotBlank
-    BigInteger balance,
-    @NotBlank
+    String name,
+    String description,
+    BigDecimal availableBalance,
+    BigDecimal lockedBalance,
+    BigDecimal totalBalance,
     Instant createdAt,
-    @NotBlank
     Instant updatedAt
 ) {
 }

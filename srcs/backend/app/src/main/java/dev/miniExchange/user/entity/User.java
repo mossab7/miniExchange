@@ -3,7 +3,6 @@ package dev.miniExchange.user.entity;
 import jakarta.persistence.*;
 import java.time.Instant;
 import java.util.UUID;
-import dev.miniExchange.user.Role;
 
 @Entity
 @Table(name = "users")
@@ -17,7 +16,7 @@ public class User {
     )
     private Long id;
     @Column(nullable = false, unique = true, updatable = false)
-    private UUID uuid = UUID.randomUUID();
+    private UUID uuid;
 
     @Column(nullable = false, unique = true, length = 50)
     private String username;
@@ -28,15 +27,18 @@ public class User {
     private String password;
 
     @Column(nullable = false, updatable = false, name = "created_at")
-    private Instant createdAt = Instant.now();
+    private Instant createdAt;
     @Column(nullable = false, name = "updated_at")
-    private Instant updatedAt = Instant.now();
+    private Instant updatedAt;
 
-    private Boolean locked = false;
-    private Boolean enabled = true;
+    @Column(nullable = false, name = "locked")
+    private Boolean locked;
+    @Column(nullable = false, name = "enabled")
+    private Boolean enabled;
 
     @Enumerated(EnumType.STRING)
-    private Role role = Role.USER;
+    @Column(nullable = false, length = 20)
+    private Role role;
 
     protected User() {
         // Default constructor for JPA
@@ -73,11 +75,6 @@ public class User {
     public Instant getUpdatedAt() {
         return updatedAt;
     }
-    @PrePersist
-    protected void onCreate() {
-        this.createdAt = Instant.now();
-        this.updatedAt = Instant.now();
-    }
     @PreUpdate
     protected void onUpdate() {
         updatedAt = Instant.now();
@@ -87,5 +84,14 @@ public class User {
     }
     public Long getId() {
         return id;
+    }
+    @PrePersist
+    protected void onPrePersist() {
+        this.uuid = UUID.randomUUID();
+        this.createdAt = Instant.now();
+        this.updatedAt = Instant.now();
+        this.role = Role.USER; // Default role
+        this.locked = false; // Default locked status
+        this.enabled = true; // Default enabled status
     }
 }

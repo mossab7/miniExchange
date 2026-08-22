@@ -4,14 +4,11 @@ package exchange;
 
 service ExchangeService
 {
-    rpc SubmitOrder(OrderRequest)
+    rpc SubmitOrder(SubmitOrderRequest)
         returns (OrderResponse);
 
     rpc CancelOrder(CancelOrderRequest)
         returns (CancelOrderResponse);
-
-    rpc GetOrder(GetOrderRequest)
-        returns (GetOrderResponse);
 }
 
 enum Side
@@ -20,10 +17,10 @@ enum Side
     SELL = 1;
 }
 
-message OrderRequest
+message SubmitOrderRequest
 {
     string symbol = 1;
-    double price = 2;
+    uint64 price = 2;
     uint64 quantity = 3;
     Side side = 4;
     string clientId = 5;
@@ -45,15 +42,4 @@ message CancelOrderResponse
 {
     bool success = 1;
     string message = 2;
-}
-
-message GetOrderRequest
-{
-    string orderId = 1;
-}
-
-message GetOrderResponse
-{
-    string orderId = 1;
-    string symbol = 2;
 }

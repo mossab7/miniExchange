@@ -39,4 +39,7 @@ public class AmountConverterService {
                 .movePointRight(decimalPlaces)
                 .toBigIntegerExact();
     }
+    public BigDecimal convertToBigDecimal(BigInteger amount, int decimalPlaces) {
+        return new BigDecimal(amount).movePointLeft(decimalPlaces);
+    }
 }

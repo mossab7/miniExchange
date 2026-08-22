@@ -1,0 +1,49 @@
+signup request :
+{
+    "username": "mossaab",
+    "email" : "mossaab@email.com",
+    "password": "mossabPass"
+}
+signup response :
+{
+    "token": "eyJhbGciOiJIUzI1NiJ9.eyJyb2xlIjoiVVNFUiIsInN1YiI6Im1vc3NhYWIiLCJpYXQiOjE3ODY4OTYxMTUsImV4cCI6MTc4Njg5NzAxNX0.AJRVcDOm-us64kNqHS9EAbXFXuQBEE8SluETb3yrr20",
+    "expiresAt": 1786897015000
+}
+
+create asset request :
+{
+    "symbol": "BTC",
+    "name" :"btc",
+    "decimalPlaces": 8,
+    "isActive": true
+}
+
+create asset response :
+{
+    "symbol": "BTC",
+    "name": "btc",
+    "decimalPlaces": 8,
+    "isActive": true,
+    "assetUuid": "29f20049-be76-4c39-8ef3-db99dcea93cc"
+}
+
+get request to get asset by symbol :
+GET /api/assets/BTC
+{
+    "symbol": "BTC",
+    "name": "btc",
+    "decimalPlaces": 8,
+    "isActive": true,
+    "assetUuid": "29f20049-be76-4c39-8ef3-db99dcea93cc"
+}
+
+get reqsut to get asset by uuid :
+GET /api/assets/id/29f20049-be76-4c39-8ef3-db99dcea93cc
+response :
+{
+    "symbol": "BTC",
+    "name": "btc",
+    "decimalPlaces": 8,
+    "isActive": true,
+    "assetUuid": "29f20049-be76-4c39-8ef3-db99dcea93cc"
+}

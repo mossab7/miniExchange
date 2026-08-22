@@ -5,9 +5,11 @@ import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.security.Keys;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
-import dev.miniExchange.user.Role;
+
+import dev.miniExchange.user.entity.Role;
+
+import javax.crypto.SecretKey;
 import java.nio.charset.StandardCharsets;
-import java.security.Key;
 import java.util.Date;
 import java.util.Map;
 import java.util.function.Function;
@@ -21,7 +23,7 @@ public class JwtService {
     @Value("${jwt.expirationMs:900000}") // default 15 minutes
     private long jwtExpirationMs;
 
-    private Key getSigningKey() {
+    private SecretKey getSigningKey() {
         return Keys.hmacShaKeyFor(jwtSecret.getBytes(StandardCharsets.UTF_8));
     }
 
@@ -30,8 +32,8 @@ public class JwtService {
         Date expiry = new Date(now.getTime() + jwtExpirationMs);
 
         return Jwts.builder()
-                .setClaims(extraClaims)
-                .setSubject(username)
+                .claims(extraClaims)
+                .subject(username)
                 .issuedAt(now)
                 .expiration(expiry)
                 .signWith(getSigningKey())
@@ -41,10 +43,13 @@ public class JwtService {
     public String generateToken(String username, Role role) {
         return generateToken(Map.of("role", role.name()), username);
     }
+    public String generateToken(String username, String role) {
+        return generateToken(Map.of("role", role), username);
+    }
 
     private Claims extractAllClaims(String token) {
         return Jwts.parser()
-            .setSigningKey(getSigningKey())
+            .verifyWith(getSigningKey())
             .build()
             .parseSignedClaims(token)
             .getPayload();

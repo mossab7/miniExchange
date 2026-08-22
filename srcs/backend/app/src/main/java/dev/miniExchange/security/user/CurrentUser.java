@@ -10,8 +10,8 @@ import java.util.UUID;
 public class CurrentUser {
     public SecurityUser get() {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        if (authentication == null) {
-            throw new IllegalStateException("No authentication found");
+        if (authentication == null || !(authentication.getPrincipal() instanceof SecurityUser)) {
+            throw new IllegalStateException("No authenticated user found");
         }
         return (SecurityUser) authentication.getPrincipal();
     }

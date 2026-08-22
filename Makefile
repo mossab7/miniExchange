@@ -9,8 +9,12 @@ down:
 re:
 	@$(COMPOSE) up -d --build
 
+test:
+	$(COMPOSE) build --build-arg RUN_TESTS=true backend
+	$(COMPOSE) up -d
+
 clean:
 	@$(COMPOSE) down --rmi all --volumes --remove-orphans
 
 
-.PHONY: all down re clean
+.PHONY: all down re clean test

@@ -62,7 +62,7 @@ class OrderServiceTest {
         }
 
         testUser = userService.createUser(new CreateUserRequest("orderUser", "orderUser@test.com", "pass123456"));
-        testPortfolio = portfolioRepository.findByUserId(testUser.getId()).orElseThrow();
+        testPortfolio = portfolioRepository.findByUser_IdAndName(testUser.getId(),"default portfolio").orElseThrow();
 
         // Setup security context for testUser
         SecurityUser securityUser = new SecurityUser(testUser);

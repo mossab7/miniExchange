@@ -11,13 +11,15 @@ import dev.miniExchange.market.MarketService;
 import dev.miniExchange.security.user.CurrentUser;
 import dev.miniExchange.portfolio.entity.Portfolio;
 import dev.miniExchange.portfolio.position.service.PositionService;
-import dev.miniExchange.portfolio.service.PortfolioService;
+import dev.miniExchange.portfolio.repository.PortfolioRepository;
+import dev.miniExchange.trade.command.ProcessTradeCommand;
 import dev.miniExchange.amountConvertor.AmountConverterService;
 import dev.miniExchange.order.entity.Side;
 import dev.miniExchange.order.entity.OrderStatus;
 import dev.miniExchange.order.service.command.PlaceOrderCommand;
 import dev.miniExchange.order.exceptions.OrderNotFoundException;
 import dev.miniExchange.common.exceptions.InsufficientQuantityException;
+import dev.miniExchange.common.exceptions.ResourceNotFoundException;
 import dev.miniExchange.common.exceptions.ValidationException;
 
 import java.math.BigInteger;
@@ -27,7 +29,7 @@ import java.util.UUID;
 @Service
 public class OrderService {
     private final OrderRepository orderRepository;
-    private final PortfolioService portfolioService;
+    private final PortfolioRepository portfolioRepository;
     private final MarketService marketService;
     private final CurrentUser currentUser;
     private final AmountConverterService amountConverterService;
@@ -35,13 +37,13 @@ public class OrderService {
 
     public OrderService(OrderRepository orderRepository,
             MarketService marketService,
-            PortfolioService portfolioService,
+            PortfolioRepository portfolioRepository,
             CurrentUser currentUser,
             AmountConverterService amountConverterService,
             PositionService positionService) {
         this.orderRepository = orderRepository;
         this.marketService = marketService;
-        this.portfolioService = portfolioService;
+        this.portfolioRepository = portfolioRepository;
         this.currentUser = currentUser;
         this.amountConverterService = amountConverterService;
         this.positionService = positionService;
@@ -71,7 +73,8 @@ public class OrderService {
 
     @Transactional
     public Order createOrder(CreateOrderRequest request) {
-        Portfolio portfolio = portfolioService.getPortfolioByUuid(request.portfolioId());
+        Portfolio portfolio =  portfolioRepository.findByUuid(request.portfolioId())
+                .orElseThrow(() -> new ResourceNotFoundException("Portfolio",request.portfolioId()));
         Market market = marketService.getMarket(request.market());
 
         BigInteger price = amountConverterService.toSmallestUnit(request.price(), market.getQuoteAssetDecimalPlaces());
@@ -118,7 +121,6 @@ public class OrderService {
         order.setQuantity(command.quantity());
         order.setStatus(OrderStatus.OPEN);
         order.setFilledQuantity(BigInteger.ZERO);
-        order.setRemainingQuantity(command.quantity());
 
         return orderRepository.save(order);
     }
@@ -139,7 +141,7 @@ public class OrderService {
         if (order.getSide() == Side.BUY) {
             BigInteger remainingCost = calculateTotalCost(
                     order.getPrice(),
-                    order.getRemainingQuantity(),
+                    order.getQuantity().subtract(order.getFilledQuantity()),
                     order.getAsset().getDecimalPlaces());
             order.getPortfolio().unlockBalance(remainingCost);
         }
@@ -150,5 +152,25 @@ public class OrderService {
 
     private BigInteger calculateTotalCost(BigInteger price, BigInteger quantity, int baseAssetDecimalPlaces) {
         return price.multiply(quantity).divide(BigInteger.TEN.pow(baseAssetDecimalPlaces));
+    }
+
+    public void applyTrade(ProcessTradeCommand command) {
+        Order sellOrder = orderRepository.findById(command.sellerOrderId())
+                .orElseThrow(() -> new OrderNotFoundException(command.sellerOrderId()));
+
+        Order buyOrder = orderRepository.findById(command.buyerOrderId())
+                .orElseThrow(() -> new OrderNotFoundException(command.buyerOrderId()));
+
+        sellOrder.updateFilledQuantity(command.amount());
+        buyOrder.updateFilledQuantity(command.amount());
+
+    }
+
+    public Long getOrderPortfolioId(Long orderId) {
+        return orderRepository.findPortfolioIdByOrderId(orderId);
+    }
+
+    public Order getReference(Long orderId) {
+        return orderRepository.getReferenceById(orderId);
     }
 }

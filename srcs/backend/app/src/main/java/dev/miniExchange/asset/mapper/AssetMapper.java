@@ -1,5 +1,7 @@
 package dev.miniExchange.asset.mapper;
 
+import org.springframework.lang.NonNull;
+
 import dev.miniExchange.asset.dto.AssetResponse;
 import dev.miniExchange.asset.entity.Asset;
 import dev.miniExchange.asset.dto.CreateAssetRequest;
@@ -18,7 +20,7 @@ public class AssetMapper {
         );
     }
 
-    static public Asset toEntity(CreateAssetRequest request) {
+    static public  @NonNull Asset toEntity(CreateAssetRequest request) {
         return new Asset(
                 request.symbol(),
                 request.name(),
@@ -27,7 +29,7 @@ public class AssetMapper {
         );
     }
 
-    static public Asset toEntity(UpdateAssetRequest request) {
+    static public @NonNull Asset toEntity(UpdateAssetRequest request) {
         return new Asset(
                 request.symbol(),
                 request.name(),

@@ -12,7 +12,6 @@ import jakarta.persistence.Id;
 import jakarta.persistence.SequenceGenerator;
 import jakarta.persistence.PrePersist;
 import java.math.BigInteger;
-import java.time.Instant;
 import java.util.UUID;
 
 @Entity

@@ -10,6 +10,7 @@ import dev.miniExchange.portfolio.position.repository.PositionRepository;
 import dev.miniExchange.security.user.CurrentUser;
 import dev.miniExchange.portfolio.position.dto.CreatePositionCommand;
 import dev.miniExchange.portfolio.repository.PortfolioRepository;
+import dev.miniExchange.trade.command.ProcessTradeCommand;
 import dev.miniExchange.portfolio.entity.Portfolio;
 import dev.miniExchange.asset.service.AssetService;
 import dev.miniExchange.asset.entity.Asset;
@@ -67,5 +68,31 @@ public class PositionService {
         Portfolio portfolio = portfolioRepository.getReferenceById(command.portfolioId());
         Position position = new Position(asset, portfolio, command.quantity());
         return positionRepository.save(position);
+    }
+
+    @Transactional
+    public void applyTrade(ProcessTradeCommand command) {
+        // Deduct traded quantity from seller's position
+        Position sellerPosition = positionRepository.findByPortfolio_IdAndAsset_Symbol(
+                command.sellerPortfolioId(),
+                command.assetSymbol())
+                .orElseThrow(() -> new PositionNotFoundException(command.assetSymbol()));
+        sellerPosition.deductQuantity(command.amount());
+
+        // Add traded quantity to buyer's position (create if this is their first
+        // holding)
+        Position buyerPosition = positionRepository.findByPortfolio_IdAndAsset_Symbol(
+                command.buyerPortfolioId(),
+                command.assetSymbol())
+                .orElseGet(() -> {
+                    Asset asset = assetService.getBySymbol(command.assetSymbol());
+                    Position newPosition = new Position(
+                        asset,
+                        portfolioRepository.getReferenceById(command.buyerPortfolioId()),
+                        BigInteger.ZERO
+                    );
+                    return positionRepository.save(newPosition);
+                });
+        buyerPosition.addQuantity(command.amount());
     }
 }

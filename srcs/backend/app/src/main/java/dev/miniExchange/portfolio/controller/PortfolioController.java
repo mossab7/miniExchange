@@ -29,9 +29,9 @@ public class PortfolioController {
         this.portfolioMapper = portfolioMapper;
     }
 
-    @GetMapping("/me")
-    public ResponseEntity<PortfolioResponse> getMyPortfolio() {
-        Portfolio portfolio = this.portfolioService.getPortfolioByUserId();
+    @GetMapping("/{portfolioName}")
+    public ResponseEntity<PortfolioResponse> getMyPortfolio(@PathVariable String portfolioName) {
+        Portfolio portfolio = this.portfolioService.getPortfolioByUserIdAndName(portfolioName);
         return ResponseEntity.ok(this.portfolioMapper.toResponse(portfolio));
     }
 

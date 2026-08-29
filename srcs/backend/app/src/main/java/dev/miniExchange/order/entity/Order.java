@@ -7,10 +7,10 @@ import dev.miniExchange.portfolio.entity.Portfolio;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.SequenceGenerator;
+import jakarta.persistence.Table;
 import jakarta.persistence.Column;
 import jakarta.persistence.FetchType;
 import jakarta.persistence.ManyToOne;
-import jakarta.persistence.OneToMany;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.PrePersist;
 import jakarta.persistence.PreUpdate;
@@ -23,7 +23,8 @@ import java.math.BigInteger;
 
 import java.time.Instant;
 
-@Entity(name = "orders")
+@Entity(name = "ExchangeOrder")
+@Table(name = "orders")
 public class Order {
 
     @Id
@@ -62,9 +63,6 @@ public class Order {
 
     @Column(nullable = false)
     private BigInteger filledQuantity;
-
-    @Column(nullable = false)
-    private BigInteger remainingQuantity;
 
     @Column(nullable = false, updatable = false)
     private Instant createdAt = Instant.now();
@@ -127,12 +125,6 @@ public class Order {
     public void setFilledQuantity(BigInteger filledQuantity) {
         this.filledQuantity = filledQuantity;
     }
-    public BigInteger getRemainingQuantity() {
-        return remainingQuantity;
-    }
-    public void setRemainingQuantity(BigInteger remainingQuantity) {
-        this.remainingQuantity = remainingQuantity;
-    }
     public Asset getQuoteAsset() {
         return quoteAsset;
     }
@@ -149,9 +141,23 @@ public class Order {
     protected void onCreate() {
         this.createdAt = Instant.now();
         this.updatedAt = Instant.now();
+        this.filledQuantity = BigInteger.ZERO;
+        this.status = OrderStatus.OPEN;
     }
     @PreUpdate
     protected void onUpdate() {
         this.updatedAt = Instant.now();
+    }
+
+    public void updateFilledQuantity(BigInteger filledQuantity) {
+        this.filledQuantity = this.filledQuantity.add(filledQuantity);
+        if(this.filledQuantity.equals(this.quantity))
+            this.status = OrderStatus.FILLED;
+        else 
+            this.status = OrderStatus.PARTIALLY_FILLED;
+    }
+
+    public boolean isFilled() {
+        return this.filledQuantity.equals(this.quantity);
     }
 }

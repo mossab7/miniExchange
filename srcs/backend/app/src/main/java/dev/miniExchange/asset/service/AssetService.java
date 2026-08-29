@@ -1,5 +1,6 @@
 package dev.miniExchange.asset.service;
 
+import org.springframework.lang.NonNull;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -13,6 +14,7 @@ import dev.miniExchange.asset.mapper.AssetMapper;
 
 import java.util.List;
 import java.util.UUID;
+
 
 @Service
 public class AssetService {
@@ -58,7 +60,11 @@ public class AssetService {
                 .orElseThrow(() -> new AssetNotFoundException(uuid.toString()));
     }
 
-    public Asset getReference(Long assetId) {
+    public Asset getReference(@NonNull Long assetId) {
         return assetRepository.getReferenceById(assetId);
+    }
+    public Asset getReferenceBySymbol(String symbol)
+    {
+        return assetRepository.getReferenceById(assetRepository.getIdBySymbol(symbol));
     }
 }

@@ -93,4 +93,15 @@ public class Position {
     public BigInteger getQuantity() {
         return quantity;
     }
+
+    public void deductQuantity(BigInteger quantity) {
+        if (quantity == null || quantity.compareTo(BigInteger.ZERO) <= 0) {
+            throw new IllegalArgumentException("Deduct quantity must be positive");
+        }
+        this.quantity = this.quantity.subtract(quantity);
+    }
+
+    public void addQuantity(BigInteger quantity) {
+        this.quantity = this.quantity.add(quantity);
+    }
 }

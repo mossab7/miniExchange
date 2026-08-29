@@ -5,7 +5,6 @@ import dev.miniExchange.asset.dto.CreateAssetRequest;
 import dev.miniExchange.asset.dto.UpdateAssetRequest;
 import dev.miniExchange.asset.dto.AssetResponse;
 import dev.miniExchange.asset.mapper.AssetMapper;
-
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -18,6 +17,7 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import jakarta.validation.Valid;
 
 import java.net.URI;
+import java.util.Objects;
 import java.util.List;
 import java.util.UUID;
 
@@ -34,7 +34,7 @@ public class AssetController {
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<AssetResponse> create(@Valid @RequestBody CreateAssetRequest request) {
         AssetResponse asset = AssetMapper.toResponse(assetService.create(request));
-        URI location = URI.create(String.format("/api/assets/%s", asset.symbol()));
+        URI location = Objects.requireNonNull(URI.create(String.format("/api/assets/%s", asset.symbol())));
         return ResponseEntity.created(location).body(asset);
     }
 

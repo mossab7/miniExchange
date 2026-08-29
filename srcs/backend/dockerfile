@@ -6,9 +6,16 @@ COPY . .
 
 # Set RUN_TESTS=true to execute tests during build (used by `make test`)
 ARG RUN_TESTS=false
+
 RUN chmod +x ./gradlew && \
     if [ "$RUN_TESTS" = "true" ]; then \
-        ./gradlew :app:test --tests "*MiniExchangeApplicationTests" --stacktrace --scan --info :app:bootJar --no-daemon ; \
+        ./gradlew :app:test \
+            --tests "*MiniExchangeApplicationTests" \
+            --stacktrace \
+            --scan \
+            --info \
+            --no-daemon \
+	    :app:bootJar; \
     else \
         ./gradlew :app:bootJar --no-daemon; \
     fi

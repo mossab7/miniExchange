@@ -58,7 +58,7 @@ class AuthFlowIntegrationTest {
         assertTrue(passwordEncoder.matches("securePassword123", user.getPassword()));
 
         // 3. Verify Default Portfolio created
-        Portfolio portfolio = portfolioRepository.findByUserId(user.getId()).orElse(null);
+        Portfolio portfolio = portfolioRepository.findByUser_IdAndName(user.getId(), "default portfolio").orElse(null);
         assertNotNull(portfolio);
         assertEquals("default portfolio", portfolio.getName());
         assertEquals(BigInteger.ZERO, portfolio.getAvailableBalance());

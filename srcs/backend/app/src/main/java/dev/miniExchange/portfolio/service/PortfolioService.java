@@ -118,7 +118,7 @@ public class PortfolioService {
         orderService.applyTrade(command);
     }
 
-    public Portfolio getReferenceByOrderId(Long id) {
-        return getReference(orderService.getOrderPortfolioId(id));
+    public Portfolio getReferenceByOrderUuid(UUID uuid) {
+        return getReference(orderService.getOrderPortfolioId(uuid));
     }
 }

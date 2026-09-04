@@ -10,8 +10,8 @@ re:
 	@$(COMPOSE) up -d --build
 
 test:
-	$(COMPOSE) build --build-arg RUN_TESTS=true backend
-	$(COMPOSE) up -d
+	RUN_TESTS=true $(COMPOSE) build --build-arg RUN_TESTS=true backend
+	RUN_TESTS=true $(COMPOSE) up -d
 
 clean:
 	@$(COMPOSE) down --rmi all --volumes --remove-orphans

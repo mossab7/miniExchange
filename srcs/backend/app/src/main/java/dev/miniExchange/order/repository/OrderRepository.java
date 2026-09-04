@@ -26,4 +26,9 @@ public interface OrderRepository extends JpaRepository<Order, Long> {
                 SELECT o.portfolio.id FROM ExchangeOrder o WHERE o.id = :id
             """)
     Long findPortfolioIdByOrderId(@Param("id") Long id);
+
+    @Query("""
+                SELECT o.portfolio.id FROM ExchangeOrder o WHERE o.uuid = :uuid
+            """)
+    Long findPortfolioIdByOrderUuid(@Param("uuid") UUID uuid);
 }

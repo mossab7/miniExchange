@@ -30,8 +30,8 @@ public class ProcessTradeCommandMapper {
         trade.setBuyer(portfolioService.getReference(command.buyerPortfolioId()));
         trade.setSeller(portfolioService.getReference(command.sellerPortfolioId()));
         trade.setAsset(assetService.getReferenceBySymbol(command.assetSymbol()));
-        trade.setBuyerOrder(orderService.getReference(command.buyerOrderId()));
-        trade.setSellerOrder(orderService.getReference(command.sellerOrderId()));
+        trade.setBuyerOrder(orderService.getOrderByUuidSystem(command.buyerOrderId()));
+        trade.setSellerOrder(orderService.getOrderByUuidSystem(command.sellerOrderId()));
         return trade;
     }
 }

@@ -18,7 +18,7 @@ public interface PortfolioRepository extends JpaRepository<Portfolio, Long> {
     @Query("""
             SELECT o.portfolio
             FROM ExchangeOrder o
-            WHERE o.id = :orderId
+            WHERE o.uuid = :orderUuid
             """)
-    Optional<Portfolio> findByOrderId(@Param("orderId") Long orderId);
+    Optional<Portfolio> findByOrderUuid(@Param("orderUuid") UUID orderUuid);
 }

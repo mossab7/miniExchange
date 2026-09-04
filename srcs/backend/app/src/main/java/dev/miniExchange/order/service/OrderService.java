@@ -71,6 +71,11 @@ public class OrderService {
         return order;
     }
 
+    public Order getOrderByUuidSystem(UUID orderUuid) {
+        return orderRepository.findByUuid(orderUuid)
+                .orElseThrow(() -> new OrderNotFoundException(orderUuid));
+    }
+
     @Transactional
     public Order createOrder(CreateOrderRequest request) {
         Portfolio portfolio =  portfolioRepository.findByUuid(request.portfolioId())
@@ -155,10 +160,10 @@ public class OrderService {
     }
 
     public void applyTrade(ProcessTradeCommand command) {
-        Order sellOrder = orderRepository.findById(command.sellerOrderId())
+        Order sellOrder = orderRepository.findByUuid(command.sellerOrderId())
                 .orElseThrow(() -> new OrderNotFoundException(command.sellerOrderId()));
 
-        Order buyOrder = orderRepository.findById(command.buyerOrderId())
+        Order buyOrder = orderRepository.findByUuid(command.buyerOrderId())
                 .orElseThrow(() -> new OrderNotFoundException(command.buyerOrderId()));
 
         sellOrder.updateFilledQuantity(command.amount());
@@ -166,8 +171,8 @@ public class OrderService {
 
     }
 
-    public Long getOrderPortfolioId(Long orderId) {
-        return orderRepository.findPortfolioIdByOrderId(orderId);
+    public Long getOrderPortfolioId(UUID orderUuid) {
+        return orderRepository.findPortfolioIdByOrderUuid(orderUuid);
     }
 
     public Order getReference(Long orderId) {

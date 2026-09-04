@@ -17,7 +17,7 @@ public class TradeEventMapper {
 
     public ProcessTradeCommand toCommand(TradeEvent event) {
         Long sellerPortfolioId = orderService.getOrderPortfolioId(event.sellerOrderId());
-        Long buyerPortfolioId  = orderService.getOrderPortfolioId(event.buyerOderId());
+        Long buyerPortfolioId  = orderService.getOrderPortfolioId(event.buyerOrderId());
 
         return new ProcessTradeCommand(
             event.quantity(),
@@ -25,7 +25,7 @@ public class TradeEventMapper {
             event.assetSymbol(),
             sellerPortfolioId,
             buyerPortfolioId,
-            event.buyerOderId(),
+            event.buyerOrderId(),
             event.sellerOrderId()
         );
     }

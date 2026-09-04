@@ -1,6 +1,7 @@
 package dev.miniExchange.trade.command;
 
 import java.math.BigInteger;
+import java.util.UUID;
 
 public record ProcessTradeCommand(
     BigInteger amount,
@@ -8,8 +9,8 @@ public record ProcessTradeCommand(
     String assetSymbol,
     Long sellerPortfolioId,
     Long buyerPortfolioId,
-    Long buyerOrderId,
-    Long sellerOrderId
+    UUID buyerOrderId,
+    UUID sellerOrderId
 ) {
     
 }

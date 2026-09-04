@@ -4,13 +4,14 @@
 #include "../PriceLevel/PriceLevel.hpp"
 #include <map>
 
-typedef std::map<double, PriceLevel*> PriceLevelMap;
+
 
 class OrderBook
 {
     private:
-        PriceLevelMap bids;
-        PriceLevelMap asks;
+        std::map<uint64_t, PriceLevel,std::greater<uint64_t>> bids;
+        std::map<uint64_t, PriceLevel> asks;
+        std::map<uint64_t, std::list<Order>::iterator> orderMap;
         void addBid(Order* order);
         void addAsk(Order* order);
         void removeBid(Order* order);

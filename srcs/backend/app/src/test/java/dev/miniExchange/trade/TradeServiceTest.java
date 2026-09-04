@@ -132,6 +132,9 @@ public class TradeServiceTest {
         assertTrue(saved.isPresent(), "Trade must be persisted");
         Trade trade = saved.get();
         assertEquals(new BigInteger("10000000"), trade.getAmount());
+        //this fail on porpuse 
+        assertEquals(new BigInteger("70000"), trade.getPrice());
+        //this should pass
         assertEquals(new BigInteger("50000"), trade.getPrice());
         assertNotNull(trade.getBuyer());
         assertNotNull(trade.getSeller());
@@ -230,8 +233,8 @@ public class TradeServiceTest {
     private TradeEvent buildEvent(UUID tradeUuid, BigInteger quantity) {
         return new TradeEvent(
                 tradeUuid,
-                sellOrder.getId(),
-                buyOrder.getId(),
+                sellOrder.getUuid(),
+                buyOrder.getUuid(),
                 "BTC",
                 quantity,
                 new BigInteger("50000"),  // $500.00 in cents

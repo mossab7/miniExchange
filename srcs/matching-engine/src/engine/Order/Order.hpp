@@ -9,30 +9,24 @@
 #include <list>
 #include <PriceLevel/PriceLevel.hpp>
 
-typedef std::list<Order*>::iterator OrderIterator;
+typedef std::list<Order>::iterator OrderIterator;
 
 class Order
 {
 private:
-	uint64_t id_;
+	uint64_t timestamp;
+	uint64_t price;
+	uint32_t Id;
+	uint32_t instrumentId;
+	//first bit is for side, second bit is for status, third bit is for reserved
+	uint32_t info;
+	uint32_t quantity;
 	OrderIterator position;
-	uint64_t userId_;
-
-	Side side_;
-
-	double price_;
-
-	uint32_t quantity_;
-	uint32_t remainingQuantity_;
-
-	uint64_t timestamp_;
-
-	OrderStatus status_;
 
 public:
-	uint64_t getId() const;
-
-	double getPrice() const;
+	uint32_t getId() const;
+	
+	uint64_t getPrice() const;
 
 	uint32_t getRemainingQuantity() const;
 

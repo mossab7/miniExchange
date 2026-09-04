@@ -14,10 +14,13 @@ services:
     build:
       context: ./backend
       dockerfile: dockerfile
+      args:
+        RUN_TESTS: ${RUN_TESTS:-false}
     container_name: miniExchange_backend
     env_file:
       - .env
     environment:
+      RUN_TESTS: ${RUN_TESTS:-false}
       SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/miniexchange
       SPRING_DATASOURCE_USERNAME: ${POSTGRES_USER}
       SPRING_DATASOURCE_PASSWORD: ${POSTGRES_PASSWORD}
@@ -26,6 +29,10 @@ services:
       - "8080:8080"
     depends_on:
       - postgres
+    volumes:
+      - ${APP_REPORT_PATH}/reports:/app/app/build/reports
+      - ${APP_REPORT_PATH}/test-results:/app/app/build/test-results
+    
 
 volumes:
   postgres_data:

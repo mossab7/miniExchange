@@ -1,28 +1,19 @@
 #ifndef TRADE_HPP
 #define TRADE_HPP
 
+#include <chrono>
+#include <time.h>
 #include <cstdint>
 
-class Trade
+struct Trade
 {
-private:
 	uint64_t tradeId;
-
 	uint64_t buyOrderId;
 	uint64_t sellOrderId;
-
-	double price;
-
-	uint32_t quantity;
-
 	uint64_t timestamp;
+	uint64_t price;
+	uint64_t quantity;
 
-public:
-	uint64_t getTradeId() const;
-	uint64_t getBuyOrderId() const;
-	uint64_t getSellOrderId() const;
-	double getPrice() const;
-	uint32_t getQuantity() const;
-	uint64_t getTimestamp() const;
+	Trade(uint64_t buyOrderId, uint64_t sellOrderId, uint64_t price, uint64_t quantity);
 };
 #endif // TRADE_HPP

@@ -1,22 +1,23 @@
 #ifndef PRICELEVEL_HPP
-#include <list>
-#include <Order/Order.hpp>
+#define PRICELEVEL_HPP
 
-typedef std::list<Order>::iterator  OrderIterator;
+#include <list>
+#include "../Order/Order.hpp"
+
 
 class PriceLevel
 {
     private:
         uint64_t price_;
-        std::list<Order> orders_;
+        Order *head_;
+        Order *tail_;
     public:
-        PriceLevel(uint64_t price);
+        explicit PriceLevel(uint64_t price);
         uint64_t getPrice() const;
-        void addOrder(Order* order);
-        void removeOrder(OrderIterator orderIterator);
-        std::list<Order>& getOrders();
+        void addOrder(Order *order);
+        void removeOrder(Order *order);
+        const Order* getOrders() const;
         bool isEmpty() const;
 };
 
-#define PRICELEVEL_HPP
 #endif // PRICELEVEL_HPP

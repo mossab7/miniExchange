@@ -1,28 +1,49 @@
-#include <PriceLevel/PriceLevel.hpp>
+#include "PriceLevel.hpp"
+#include <iterator>
 
-PriceLevel::PriceLevel(double price) : price_(price) {}
+PriceLevel::PriceLevel(uint64_t price) : price_(price), head_(nullptr), tail_(nullptr) {}
 
-double PriceLevel::getPrice() const
+uint64_t PriceLevel::getPrice() const
 {
     return price_;
 }
 
-void PriceLevel::addOrder(Order* order)
+void PriceLevel::addOrder(Order *order)
 {
-    orders_.push_back(order);
+    if (head_ == nullptr)
+    {
+        head_ = order;
+        tail_ = order;
+        order->next = nullptr;
+        order->prev = nullptr;
+    }
+    else
+    {
+        tail_->next = order;
+        order->prev = tail_;
+        order->next = nullptr;
+        tail_ = order;
+    }
 }
 
-void PriceLevel::removeOrder(OrderIterator orderIterator)
+void PriceLevel::removeOrder(Order *order)
 {
-    orders_.erase(orderIterator);
+    if (order->prev)
+    {
+        order->prev->next = order->next;
+    }
+    else
+    {
+        head_ = order->next;
+    }
 }
 
-std::list<Order*>& PriceLevel::getOrders()
+const Order* PriceLevel::getOrders() const
 {
-    return orders_;
+    return head_;
 }
 
 bool PriceLevel::isEmpty() const
 {
-    return orders_.empty();
+    return head_ == nullptr;
 }

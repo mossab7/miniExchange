@@ -1,32 +1,11 @@
-#include <Trade.hpp>
+#include "Trade.hpp"
 
-uint64_t Trade::getTradeId() const
+#include "../matchingEngine/matchingEngine.hpp"
+
+Trade::Trade(uint64_t buyOrderId, uint64_t sellOrderId, uint64_t price, uint64_t quantity)
+	:  buyOrderId(buyOrderId), sellOrderId(sellOrderId), price(price), quantity(quantity)
 {
-	return tradeId;
+	static uint64_t nextTradeId = 1;
+	tradeId = g_engineId << 48 | ++nextTradeId;
+	timestamp = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch()).count();
 }
-
-uint64_t Trade::getBuyOrderId() const
-{
-	return buyOrderId;
-}
-
-uint64_t Trade::getSellOrderId() const
-{
-	return sellOrderId;
-}
-
-double Trade::getPrice() const
-{
-	return price;
-}
-
-uint32_t Trade::getQuantity() const
-{
-	return quantity;
-}
-
-uint64_t Trade::getTimestamp() const
-{
-	return timestamp;
-}
-

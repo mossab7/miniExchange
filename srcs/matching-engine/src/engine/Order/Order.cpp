@@ -1,61 +1,31 @@
-#include <Order.hpp>
+#include "Order.hpp"
 
 
 uint64_t Order::getId() const
 {
-	return id_;
+	return id;
 }
 
-double Order::getPrice() const
+uint64_t Order::getPrice() const
 {
-	return price_;
+	return price;
 }
 
-uint32_t Order::getRemainingQuantity() const
+uint64_t Order::getQuantity() const
 {
-	return remainingQuantity_;
+	return quantity;
 }
 
 Side Order::getSide() const
 {
-	return side_;
+	return side;
 }
 
-OrderStatus Order::getStatus() const
+void Order::fill(uint64_t const FillQuantity)
 {
-	return status_;
+	quantity -= FillQuantity;
 }
 
-void Order::fill(uint32_t quantity)
-{
-	if (quantity > remainingQuantity_)
-	{
-		throw std::invalid_argument("Fill quantity exceeds remaining quantity");
-	}
+Order::Order(const SubmitOrderRequest &submitOrderRequest)
+	: id(submitOrderRequest.id), price(submitOrderRequest.price), quantity(submitOrderRequest.quantity), side(submitOrderRequest.side), prev(nullptr), next(nullptr) {}
 
-	remainingQuantity_ -= quantity;
-
-	if (remainingQuantity_ == 0)
-	{
-		status_ = OrderStatus::FILLED;
-	}
-	else
-	{
-		status_ = OrderStatus::PARTIALLY_FILLED;
-	}
-}
-
-void Order::cancel()
-{
-	if (status_ == OrderStatus::FILLED)
-	{
-		throw std::logic_error("Cannot cancel a filled order");
-	}
-
-	status_ = OrderStatus::CANCELLED;
-}
-
-OrderIterator Order::getPosition() const
-{
-	return position;
-}

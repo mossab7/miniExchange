@@ -1,146 +1,88 @@
 #include "OrderBook.hpp"
+#include <stdexcept>
 
 OrderBook::OrderBook() {}
 
-OrderBook::~OrderBook()
-{
-    for (auto &pair : bids)
-    {
-        delete pair.second;
-    }
-    for (auto& pair : asks)
-    {
-        delete pair.second;
-    }
+OrderBook::~OrderBook() = default;
 
+void OrderBook::rejectOrder(uint64_t id, const std::string& reason)
+{
+    // TODO: Implement order rejection logic, e.g., logging or notifying the user  
 }
 
 PriceLevel* OrderBook::getPriceLevel(Order* order)
 {
 
-    double price = order->getPrice();
+    uint64_t price = order->getPrice();
     if (order->getSide() == Side::BUYER)
     {
         auto it = bids.find(price);
-        if (it != bids.end())
-        {
-            return it->second;
-        }
+        return (it != bids.end()) ? it->second : nullptr;
     }
     else
     {
         auto it = asks.find(price);
-        if (it != asks.end())
-        {
-            return it->second;
-        }
+        return (it != asks.end()) ? it->second : nullptr;
     }
     return nullptr;
 }
 
-
 PriceLevel *OrderBook::getBestBid()
-{
-    if (bids.empty())
-    {
-        return nullptr;
-    }
-    return bids.rbegin()->second;
+{   
+    return bids.empty() ? nullptr : bids.begin()->second;
 }
 
 PriceLevel *OrderBook::getBestAsk()
 {
-    if (asks.empty())
-    {
-        return nullptr;
-    }
-    return asks.begin()->second;
+    return asks.empty() ? nullptr : asks.begin()->second;
 }
 
-void OrderBook::addBid(Order* order)
-{
-    double price = order->getPrice();
-    auto it = bids.find(price);
-    if (it == bids.end())
-    {
-        PriceLevel* newLevel = new PriceLevel(price);
-        newLevel->addOrder(order);
-        bids[price] = newLevel;
-    }
-    else
-    {
-        it->second->addOrder(order);
-    }
-}
 
-void OrderBook::addAsk(Order* order)
+void OrderBook::addOrder(const SubmitOrderRequest &request)
 {
-    double price = order->getPrice();
-    auto it = asks.find(price);
-    if (it == asks.end())
+    Order* order = OrderPool_.acquire(request);
+    PriceLevel* priceLevel = nullptr;
+    if (request.side == Side::BUYER)
     {
-        PriceLevel* newLevel = new PriceLevel(price);
-        newLevel->addOrder(order);
-        asks[price] = newLevel;
-    }
-    else
-    {
-        it->second->addOrder(order);
-    }
-}
-
-void OrderBook::addOrder(Order* order)
-{
-    if (order->getSide() == Side::BUYER)
-    {
-        addBid(order);
-    }
-    else
-    {
-        addAsk(order);
-    }
-}
-
-void OrderBook::removeBid(Order* order)
-{
-    double price = order->getPrice();
-    auto it = bids.find(price);
-    if (it != bids.end())
-    {
-        PriceLevel* level = it->second;
-        level->removeOrder(order->getPosition());
-        if (level->isEmpty())
+        auto [it, inserted] = bids.try_emplace(request.price, nullptr);
+        if (inserted)
         {
-            delete level;
-            bids.erase(it);
+            it->second = priceLevelPool.acquire(request.price);
         }
+        priceLevel = it->second;
     }
-}
-
-void OrderBook::removeAsk(Order* order)
-{
-    double price = order->getPrice();
-    auto it = asks.find(price);
-    if (it != asks.end())
+    else
     {
-        PriceLevel* level = it->second;
-        level->removeOrder(order->getPosition());
-        if (level->isEmpty())
+        auto [it, inserted] = asks.try_emplace(request.price, nullptr);
+        if (inserted)
         {
-            delete level;
-            asks.erase(it);
+            it->second = priceLevelPool.acquire(request.price);
         }
+        priceLevel = it->second;
     }
+    priceLevel->addOrder(order);
+    orderMap.emplace(request.id, OrderIterator(priceLevel, order));
 }
 
 void OrderBook::removeOrder(Order* order)
 {
-    if (order->getSide() == Side::BUYER)
+    
+    auto it = orderMap.find(order->getId());
+    if (it == orderMap.end()) return; 
+
+    OrderIterator orderIterator = it->second;
+    PriceLevel* priceLevel = it->second.first;
+
+    priceLevel->removeOrder(it->second.second);
+    
+    if (priceLevel->isEmpty())
     {
-        removeBid(order);
+        if (order->getSide() == Side::BUYER)
+            bids.erase(priceLevel->getPrice());
+        else
+            asks.erase(priceLevel->getPrice());
+        priceLevelPool.release(priceLevel);
     }
-    else
-    {
-        removeAsk(order);
-    }
+    orderMap.erase(it);
+    OrderPool_.release(order);
 }

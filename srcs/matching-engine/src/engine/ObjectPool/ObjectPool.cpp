@@ -1,5 +1,6 @@
 #include "ObjectPool.hpp"
 
+
 template <typename T>
 ObjectPool<T>::ObjectPool(uint32_t capacity) : capacity_(capacity), freeList_(nullptr) {
     allocatedChunks_.reserve(INITIAL_CHUNK_COUNT);

@@ -18,6 +18,7 @@ class PriceLevel
         void removeOrder(Order *order);
         const Order* getOrders() const;
         bool isEmpty() const;
+        Order* getFirstOrder() const;
 };
 
 #endif // PRICELEVEL_HPP

@@ -21,6 +21,7 @@ class MatchingEngine
 
 inline void MatchingEngine::submit(const SubmitOrderRequest &submitOrderRequest)
 {
-    orderBooks[submitOrderRequest.instrumentId % orderBooks.size()].addOrder(submitOrderRequest);
+    
 }
+
 #endif // MATCHING_ENGINE_HPP

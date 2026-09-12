@@ -1,6 +1,7 @@
 #ifndef ORDER_BOOK_HPP
 #define ORDER_BOOK_HPP
 
+#include <cstdint>
 #include <map>
 #include <unordered_map>
 #include "../PriceLevel/PriceLevel.hpp"
@@ -27,10 +28,14 @@ class OrderBook
         OrderBook();
         ~OrderBook();
         PriceLevel* getPriceLevel(Order* order);
-        void addOrder(const SubmitOrderRequest &request);
+        void addToBook(Order *order);
+        void matchAgainstAsks(Order* incomingOrder);
+        void matchAgainstBids(Order* incomingOrder);
+        void submitOrder(const SubmitOrderRequest &request);
         void removeOrder(Order* order);
         PriceLevel *getBestBid();
         PriceLevel *getBestAsk();
+        uint64_t getBestAskPrice();
 };
 
 

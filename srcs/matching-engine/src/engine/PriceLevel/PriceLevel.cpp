@@ -47,3 +47,8 @@ bool PriceLevel::isEmpty() const
 {
     return head_ == nullptr;
 }
+
+Order* PriceLevel::getFirstOrder() const
+{
+    return head_;
+}

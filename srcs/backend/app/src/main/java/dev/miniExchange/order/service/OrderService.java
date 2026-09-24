@@ -21,6 +21,7 @@ import dev.miniExchange.order.exceptions.OrderNotFoundException;
 import dev.miniExchange.common.exceptions.InsufficientQuantityException;
 import dev.miniExchange.common.exceptions.ResourceNotFoundException;
 import dev.miniExchange.common.exceptions.ValidationException;
+import dev.miniExchange.infra.grpc.MatchingEngineClient;
 
 import java.math.BigInteger;
 import java.util.List;
@@ -34,19 +35,22 @@ public class OrderService {
     private final CurrentUser currentUser;
     private final AmountConverterService amountConverterService;
     private final PositionService positionService;
+    private final MatchingEngineClient matchingEngineClient;
 
     public OrderService(OrderRepository orderRepository,
             MarketService marketService,
             PortfolioRepository portfolioRepository,
             CurrentUser currentUser,
             AmountConverterService amountConverterService,
-            PositionService positionService) {
+            PositionService positionService,
+            MatchingEngineClient matchingEngineClient) {
         this.orderRepository = orderRepository;
         this.marketService = marketService;
         this.portfolioRepository = portfolioRepository;
         this.currentUser = currentUser;
         this.amountConverterService = amountConverterService;
         this.positionService = positionService;
+        this.matchingEngineClient = matchingEngineClient;
     }
 
     public List<Order> getOrdersByUserId() {
@@ -126,8 +130,9 @@ public class OrderService {
         order.setQuantity(command.quantity());
         order.setStatus(OrderStatus.OPEN);
         order.setFilledQuantity(BigInteger.ZERO);
-
-        return orderRepository.save(order);
+        order = orderRepository.saveAndFlush(order);
+        matchingEngineClient.submitOrder(order);
+        return order;
     }
 
     @Transactional
@@ -152,6 +157,7 @@ public class OrderService {
         }
 
         order.setStatus(OrderStatus.CANCELED);
+        matchingEngineClient.cancelOrder(order);
         orderRepository.save(order);
     }
 
@@ -177,5 +183,10 @@ public class OrderService {
 
     public Order getReference(Long orderId) {
         return orderRepository.getReferenceById(orderId);
+    }
+
+    public Order getByIdSystem(Long orderId) {
+        return orderRepository.findById(orderId)
+                .orElseThrow(() -> new OrderNotFoundException(orderId));
     }
 }

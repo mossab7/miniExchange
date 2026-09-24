@@ -1,13 +1,12 @@
 #ifndef TRADE_HPP
 #define TRADE_HPP
 
-#include <chrono>
-#include <time.h>
 #include <cstdint>
+#include <string>
 
 struct Trade
 {
-	uint64_t tradeId;
+	std::string tradeId;
 	uint64_t buyOrderId;
 	uint64_t sellOrderId;
 	uint64_t timestamp;

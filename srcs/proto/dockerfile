@@ -1,0 +1,58 @@
+FROM ubuntu:24.04 AS grpc-builder
+
+ENV DEBIAN_FRONTEND=noninteractive
+
+RUN apt-get update && apt-get install -y \
+    build-essential \
+    cmake \
+    git \
+    pkg-config \
+    autoconf \
+    libtool \
+    && rm -rf /var/lib/apt/lists/*
+
+WORKDIR /tmp
+
+RUN git clone \
+    --recurse-submodules \
+    -b v1.64.2 \
+    --depth 1 \
+    --shallow-submodules \
+    https://github.com/grpc/grpc.git
+
+WORKDIR /tmp/grpc/cmake/build
+
+RUN cmake ../.. \
+    -DgRPC_INSTALL=ON \
+    -DgRPC_BUILD_TESTS=OFF \
+    -DCMAKE_BUILD_TYPE=Release \
+    -DgRPC_ABSL_PROVIDER=module \
+    -DgRPC_CARES_PROVIDER=module \
+    -DgRPC_PROTOBUF_PROVIDER=module \
+    -DgRPC_RE2_PROVIDER=module \
+    -DgRPC_SSL_PROVIDER=module \
+    -DgRPC_ZLIB_PROVIDER=module
+
+RUN make -j$(nproc) && make install
+
+
+FROM ubuntu:24.04
+
+ENV DEBIAN_FRONTEND=noninteractive
+
+COPY --from=grpc-builder /usr/local /usr/local
+
+RUN ldconfig
+
+WORKDIR /app
+
+COPY proto /app/proto
+
+RUN mkdir -p /app/matching-engine/src/generated/proto
+
+RUN protoc \
+    -I=/app/proto \
+    --cpp_out=/app/matching-engine/src/generated/proto \
+    --grpc_out=/app/matching-engine/src/generated/proto \
+    --plugin=protoc-gen-grpc=$(which grpc_cpp_plugin) \
+    /app/proto/miniExchange.proto

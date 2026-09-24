@@ -1,5 +1,6 @@
 #include "Order.hpp"
 
+#include <stdexcept>
 
 uint64_t Order::getId() const
 {
@@ -23,9 +24,12 @@ Side Order::getSide() const
 
 void Order::fill(uint64_t const FillQuantity)
 {
+	if (FillQuantity > quantity)
+	{
+		throw std::out_of_range("fill quantity exceeds remaining order quantity");
+	}
 	quantity -= FillQuantity;
 }
 
 Order::Order(const SubmitOrderRequest &submitOrderRequest)
 	: id(submitOrderRequest.id), price(submitOrderRequest.price), quantity(submitOrderRequest.quantity), side(submitOrderRequest.side), prev(nullptr), next(nullptr) {}
-

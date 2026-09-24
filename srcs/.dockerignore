@@ -1,0 +1,20 @@
+# Build directories
+build/
+**/build/
+matching-engine/build/
+matching-engine/src/generated/
+backend/build/
+backend/.gradle/
+
+# IDE / Editor configuration
+.vscode/
+.idea/
+.clangd/
+
+# Version control
+.git/
+.gitignore
+
+# Environment / logs
+.env*
+*.log

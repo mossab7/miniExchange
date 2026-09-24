@@ -11,6 +11,7 @@ import dev.miniExchange.asset.exceptions.AssetAlreadyExistsException;
 import dev.miniExchange.asset.exceptions.AssetNotFoundException;
 import dev.miniExchange.asset.repository.AssetRepository;
 import dev.miniExchange.asset.mapper.AssetMapper;
+import dev.miniExchange.infra.grpc.MatchingEngineClient;
 
 import java.util.List;
 import java.util.UUID;
@@ -20,9 +21,11 @@ import java.util.UUID;
 public class AssetService {
 
     private final AssetRepository assetRepository;
+    private final MatchingEngineClient matchingEngineClient;
 
-    public AssetService(AssetRepository assetRepository) {
+    public AssetService(AssetRepository assetRepository, MatchingEngineClient matchingEngineClient) {
         this.assetRepository = assetRepository;
+        this.matchingEngineClient = matchingEngineClient;
     }
 
     @Transactional
@@ -30,8 +33,9 @@ public class AssetService {
         if (assetRepository.existsBySymbol(request.symbol())) {
             throw new AssetAlreadyExistsException(request.symbol());
         }
-        Asset asset = AssetMapper.toEntity(request);
-        return assetRepository.save(asset);
+        Asset asset = assetRepository.saveAndFlush(AssetMapper.toEntity(request));
+        matchingEngineClient.addInstrument(asset);
+        return asset;
     }
 
     public Asset getBySymbol(String symbol) {
@@ -62,6 +66,11 @@ public class AssetService {
 
     public Asset getReference(@NonNull Long assetId) {
         return assetRepository.getReferenceById(assetId);
+    }
+
+    public Asset getByIdSystem(Long assetId) {
+        return assetRepository.findById(assetId)
+                .orElseThrow(() -> new AssetNotFoundException(String.valueOf(assetId)));
     }
     public Asset getReferenceBySymbol(String symbol)
     {

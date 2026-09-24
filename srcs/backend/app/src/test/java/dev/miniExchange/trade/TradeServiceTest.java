@@ -7,6 +7,7 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.test.context.ActiveProfiles;
+import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.transaction.annotation.Transactional;
 
 import dev.miniExchange.asset.dto.CreateAssetRequest;
@@ -41,6 +42,7 @@ import static org.junit.jupiter.api.Assertions.*;
 @SpringBootTest
 @ActiveProfiles("test")
 @Transactional
+@DirtiesContext(classMode = DirtiesContext.ClassMode.BEFORE_CLASS)
 public class TradeServiceTest {
 
     @Autowired private TradeService tradeService;
@@ -132,9 +134,6 @@ public class TradeServiceTest {
         assertTrue(saved.isPresent(), "Trade must be persisted");
         Trade trade = saved.get();
         assertEquals(new BigInteger("10000000"), trade.getAmount());
-        //this fail on porpuse 
-        assertEquals(new BigInteger("70000"), trade.getPrice());
-        //this should pass
         assertEquals(new BigInteger("50000"), trade.getPrice());
         assertNotNull(trade.getBuyer());
         assertNotNull(trade.getSeller());
@@ -223,6 +222,19 @@ public class TradeServiceTest {
         Order refreshedBuy  = orderService.getReference(buyOrder.getId());
         assertEquals(OrderStatus.PARTIALLY_FILLED, refreshedSell.getStatus());
         assertEquals(OrderStatus.PARTIALLY_FILLED, refreshedBuy.getStatus());
+    }
+
+    @Test
+    void executeTrade_isIdempotentForDuplicateEvent() {
+        UUID tradeUuid = UUID.randomUUID();
+        TradeEvent event = buildEvent(tradeUuid, new BigInteger("10000000"));
+
+        tradeService.executeTrade(event);
+        tradeService.executeTrade(event);
+
+        assertEquals(1, tradeRepository.findAll().stream()
+                .filter(trade -> tradeUuid.equals(trade.getUuid()))
+                .count());
     }
 
     // ─────────────────────────────────────────────────────────────────────────

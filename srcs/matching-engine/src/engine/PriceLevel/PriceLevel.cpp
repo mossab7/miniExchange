@@ -10,6 +10,11 @@ uint64_t PriceLevel::getPrice() const
 
 void PriceLevel::addOrder(Order *order)
 {
+    if (order == nullptr || order == head_ || order->prev != nullptr || order->next != nullptr)
+    {
+        return;
+    }
+
     if (head_ == nullptr)
     {
         head_ = order;
@@ -28,14 +33,46 @@ void PriceLevel::addOrder(Order *order)
 
 void PriceLevel::removeOrder(Order *order)
 {
-    if (order->prev)
-    {
-        order->prev->next = order->next;
+	if (order == nullptr || head_ == nullptr)
+	{
+		return;
+	}
+
+	if (order != head_ && order->prev == nullptr)
+	{
+		return;
+	}
+
+	if (order->prev && order->prev->next != order)
+	{
+		return;
+	}
+
+	if (order->next && order->next->prev != order)
+	{
+		return;
+	}
+
+	if (order->prev)
+	{
+		order->prev->next = order->next;
     }
     else
-    {
-        head_ = order->next;
-    }
+	{
+		head_ = order->next;
+	}
+
+	if (order->next)
+	{
+		order->next->prev = order->prev;
+	}
+	else
+	{
+		tail_ = order->prev;
+	}
+
+	order->prev = nullptr;
+	order->next = nullptr;
 }
 
 const Order* PriceLevel::getOrders() const

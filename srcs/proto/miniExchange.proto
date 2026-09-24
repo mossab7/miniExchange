@@ -1,0 +1,75 @@
+syntax = "proto3";
+
+package miniExchange;
+
+option java_package = "dev.miniExchange.infra.grpc.generated";
+option java_multiple_files = true;
+
+service MiniExchangeService
+{
+    rpc AddInstrument(AddInstrumentRequest)
+        returns (AddInstrumentResponse);
+
+    rpc SubmitOrder(SubmitOrderRequest)
+        returns (SubmitOrderResponse);
+
+    rpc CancelOrder(CancelOrderRequest)
+        returns (CancelOrderResponse);
+}
+
+
+enum Side
+{
+    BUY = 0;
+    SELL = 1;
+}
+
+message SubmitOrderRequest
+{
+    uint64 instrumentId = 1;
+    uint64 orderId = 2;
+    uint64 price = 3;
+    uint64 quantity = 4;
+    Side side = 5;
+}
+
+message AddInstrumentRequest
+{
+    uint64 instrumentId = 1;
+}
+
+message AddInstrumentResponse
+{
+    uint64 instrumentId = 1;
+    bool success = 2;
+}
+
+message SubmitOrderResponse
+{
+    uint64 orderId = 1;
+    bool success = 2;
+}
+
+message CancelOrderRequest
+{
+    uint64 orderId = 1;
+}
+
+message CancelOrderResponse
+{
+    uint64 orderId = 1;
+    bool success = 2;
+}
+
+// The durable cross-service representation of a completed match. Kafka carries
+// the serialized protobuf message produced by the matching engine.
+message TradeEvent
+{
+    string tradeId = 1;
+    uint64 instrumentId = 2;
+    uint64 buyOrderId = 3;
+    uint64 sellOrderId = 4;
+    uint64 price = 5;
+    uint64 quantity = 6;
+    int64 timestamp_epoch_millis = 7;
+}

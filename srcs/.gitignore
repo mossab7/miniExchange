@@ -1,0 +1,62 @@
+# Build artifacts
+build/
+**/build/
+**/.gradle/
+matching-engine/build/
+matching-engine/src/generated/
+backend/build/
+backend/.gradle/
+
+# CMake / Ninja artifacts created outside a build directory
+**/CMakeFiles/
+**/CMakeCache.txt
+**/cmake_install.cmake
+**/CTestTestfile.cmake
+**/compile_commands.json
+**/.ninja_deps
+**/.ninja_log
+Testing/
+
+# Compiled files
+*.class
+*.o
+*.a
+*.so
+
+# IDE / Editor configuration
+.vscode/
+.idea/
+*.iml
+*.ipr
+*.iws
+.clangd/
+
+# Environment / Secrets
+.env
+.env.*
+!.env.example
+
+# Logs & Reports
+*.log
+logs/
+reports/
+test-results/
+hs_err_pid*.log
+*.pid
+
+# Local tooling / caches
+.cache/
+.clangd/
+cmake-build-*/
+out/
+tmp/
+temp/
+
+# Editor swap files
+*.swp
+*.swo
+*~
+
+# OS files
+.DS_Store
+Thumbs.db

@@ -33,6 +33,9 @@ public class TradeService {
     @Transactional
     public void executeTrade(TradeEvent tradeEvent)
     {
+        if (tradeRepository.findByUuid(tradeEvent.tradeUuid()).isPresent()) {
+            return;
+        }
         ProcessTradeCommand command = tradeEventMapper.toCommand(tradeEvent);
         portfolioService.processTrade(command);
         Trade trade = processTradeCommandMapper.toEntity(command);

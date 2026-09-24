@@ -1,10 +1,7 @@
 #ifndef ORDER_HPP
 #define ORDER_HPP
 
-#include <iostream>
-#include <stdexcept>
 #include <cstdint>
-#include <list>
 #include "../matchingEngine/submitOrderRequest.hpp"
 
 class Order

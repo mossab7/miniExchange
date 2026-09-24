@@ -1,0 +1,7 @@
+build/
+protobuf-36.1/
+protobuf-install/
+.git/
+.vscode/
+.clangd/
+src/generated/

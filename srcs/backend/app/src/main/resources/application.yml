@@ -7,5 +7,17 @@ spring:
   jpa:
     open-in-view: false
 
+  kafka:
+    bootstrap-servers: ${KAFKA_BOOTSTRAP_SERVERS:localhost:9092}
+
+grpc:
+  matching-engine:
+    host: ${MATCHING_ENGINE_HOST:localhost}
+    port: ${MATCHING_ENGINE_PORT:50051}
+
+trade-events:
+  topic: ${TRADE_EVENTS_TOPIC:trade-events}
+  consumer-group: ${TRADE_EVENTS_CONSUMER_GROUP:mini-exchange-trades}
+
 jwt:
   expirationMs: ${jwt.expirationMs:900000}

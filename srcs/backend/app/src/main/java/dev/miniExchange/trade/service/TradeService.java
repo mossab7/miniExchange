@@ -33,13 +33,22 @@ public class TradeService {
     @Transactional
     public void executeTrade(TradeEvent tradeEvent)
     {
-        if (tradeRepository.findByUuid(tradeEvent.tradeUuid()).isPresent()) {
+        if (tradeEvent.engineNamespace() > 0 && tradeEvent.executionId() > 0 &&
+            tradeRepository.findByEngineNamespaceAndExecutionId(
+                tradeEvent.engineNamespace(), tradeEvent.executionId()).isPresent()) {
+            return;
+        }
+        if (tradeEvent.tradeUuid() != null && tradeRepository.findByUuid(tradeEvent.tradeUuid()).isPresent()) {
             return;
         }
         ProcessTradeCommand command = tradeEventMapper.toCommand(tradeEvent);
         portfolioService.processTrade(command);
         Trade trade = processTradeCommandMapper.toEntity(command);
-        trade.setUuid(tradeEvent.tradeUuid());
+        trade.setEngineNamespace(tradeEvent.engineNamespace() > 0 ? tradeEvent.engineNamespace() : null);
+        trade.setExecutionId(tradeEvent.executionId() > 0 ? tradeEvent.executionId() : null);
+        if (tradeEvent.tradeUuid() != null) {
+            trade.setUuid(tradeEvent.tradeUuid());
+        }
         tradeRepository.save(trade);
     }
 }

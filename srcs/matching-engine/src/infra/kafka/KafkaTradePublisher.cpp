@@ -14,7 +14,7 @@ namespace
 class NullTradePublisher final : public TradePublisher
 {
 public:
-    void publish(const Trade&, uint64_t) override {}
+    void publish(const Execution&, uint64_t) override {}
 };
 } // namespace
 
@@ -47,16 +47,17 @@ public:
         producer_->flush(5000);
     }
 
-    void publish(const Trade& trade, uint64_t instrumentId)
+    void publish(const Execution& execution, uint64_t instrumentId)
     {
         miniExchange::TradeEvent event;
-        event.set_tradeid(trade.tradeId);
+        event.set_enginenamespace(execution.engineNamespace);
+        event.set_executionid(execution.executionId);
         event.set_instrumentid(instrumentId);
-        event.set_buyorderid(trade.buyOrderId);
-        event.set_sellorderid(trade.sellOrderId);
-        event.set_price(trade.price);
-        event.set_quantity(trade.quantity);
-        event.set_timestamp_epoch_millis(static_cast<int64_t>(trade.timestamp));
+        event.set_buyorderid(execution.buyOrderId);
+        event.set_sellorderid(execution.sellOrderId);
+        event.set_price(execution.price);
+        event.set_quantity(execution.quantity);
+        event.set_timestamp_epoch_millis(static_cast<int64_t>(execution.timestamp));
 
         std::string payload;
         if (!event.SerializeToString(&payload))
@@ -110,7 +111,7 @@ KafkaTradePublisher::KafkaTradePublisher(const char* bootstrapServers, const cha
 
 KafkaTradePublisher::~KafkaTradePublisher() = default;
 
-void KafkaTradePublisher::publish(const Trade& trade, uint64_t instrumentId)
+void KafkaTradePublisher::publish(const Execution& execution, uint64_t instrumentId)
 {
-    impl_->publish(trade, instrumentId);
+    impl_->publish(execution, instrumentId);
 }

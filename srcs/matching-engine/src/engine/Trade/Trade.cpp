@@ -1,35 +1,48 @@
 #include <chrono>
-#include <array>
-#include <iomanip>
+#include <atomic>
 #include <random>
-#include <sstream>
+#include <cstdio>
 
 #include "Trade.hpp"
 
 
-Trade::Trade(uint64_t buyOrderId, uint64_t sellOrderId, uint64_t price, uint64_t quantity)
-	: buyOrderId(buyOrderId), sellOrderId(sellOrderId), price(price), quantity(quantity)
+namespace
 {
-	std::random_device random;
-	std::array<unsigned char, 16> bytes{};
-	for (auto& byte : bytes)
-	{
-		byte = static_cast<unsigned char>(random());
-	}
-	bytes[6] = static_cast<unsigned char>((bytes[6] & 0x0f) | 0x40);
-	bytes[8] = static_cast<unsigned char>((bytes[8] & 0x3f) | 0x80);
-
-	std::ostringstream id;
-	id << std::hex << std::setfill('0');
-	for (std::size_t index = 0; index < bytes.size(); ++index)
-	{
-		if (index == 4 || index == 6 || index == 8 || index == 10)
+std::atomic<uint64_t> nextExecutionId{1};
+uint64_t allocateExecutionId() noexcept { return nextExecutionId.fetch_add(1, std::memory_order_relaxed); }
+uint64_t nowMillis() noexcept { return static_cast<uint64_t>(std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch()).count()); }
+uint64_t processNamespace() noexcept
+{
+	static const uint64_t value = [] {
+		try
 		{
-			id << '-';
+			std::random_device random;
+			return (static_cast<uint64_t>(random()) << 32) | random();
 		}
-		id << std::setw(2) << static_cast<unsigned int>(bytes[index]);
-	}
-	tradeId = id.str();
-	timestamp = static_cast<uint64_t>(std::chrono::duration_cast<std::chrono::milliseconds>(
-		std::chrono::system_clock::now().time_since_epoch()).count());
+		catch (...)
+		{
+			return static_cast<uint64_t>(std::chrono::steady_clock::now().time_since_epoch().count());
+		}
+	}();
+	return value;
 }
+}
+
+std::string tradeIdForExecution(uint64_t executionId)
+{
+	char buffer[37];
+	const uint64_t processId = processNamespace();
+	std::snprintf(buffer, sizeof(buffer), "%08llx-%04llx-4%03llx-8%03llx-%012llx",
+	              static_cast<unsigned long long>(processId >> 32),
+	              static_cast<unsigned long long>((processId >> 16) & 0xffff),
+	              static_cast<unsigned long long>(processId & 0xfff),
+	              static_cast<unsigned long long>((processId >> 4) & 0xfff),
+	              static_cast<unsigned long long>(executionId & 0xffffffffffffULL));
+	return buffer;
+}
+
+Trade::Trade(uint64_t buyOrderId, uint64_t sellOrderId, uint64_t price, uint64_t quantity)
+	: Trade(Execution{0, allocateExecutionId(), buyOrderId, sellOrderId, nowMillis(), price, quantity}) {}
+
+Trade::Trade(const Execution& execution)
+	: tradeId(tradeIdForExecution(execution.executionId)), buyOrderId(execution.buyOrderId), sellOrderId(execution.sellOrderId), timestamp(execution.timestamp), price(execution.price), quantity(execution.quantity) {}

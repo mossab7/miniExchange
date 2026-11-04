@@ -23,7 +23,7 @@ MiniExchange is not just CRUD around an order table. It demonstrates the boundar
 | Matching | Engine | C++20, order books, worker queues |
 | Command transport | Backend ↔ Engine | gRPC + protobuf |
 | Trade settlement | Engine → Backend | Kafka + protobuf `TradeEvent` |
-| Delivery safety | Backend | At-least-once consumer with UUID idempotency |
+| Delivery safety | Backend | At-least-once consumer with execution-identity idempotency |
 
 The matching engine never needs to know how a portfolio is persisted. The backend never needs to implement price matching. Each service has one job and one explicit contract.
 
@@ -52,7 +52,7 @@ The matching engine never needs to know how a portfolio is persisted. The backen
 3. The engine matches against the instrument's order book.
 4. Every fill becomes a protobuf `TradeEvent` and is published to Kafka.
 5. The backend consumes the event and updates trades, balances, and order state.
-6. If Kafka redelivers the event, the trade UUID prevents duplicate settlement.
+6. If Kafka redelivers the event, the `(engineNamespace, executionId)` identity prevents duplicate settlement; Spring generates the persistent trade UUID on first insertion.
 
 The API is therefore intentionally asynchronous after submission: an order can be returned as `OPEN` before the matching result has been consumed.
 
@@ -123,6 +123,10 @@ cmake -S . -B build -DBUILD_GRPC=ON -DBUILD_TESTING=ON
 cmake --build build --parallel
 ctest --test-dir build --output-on-failure
 ```
+
+For dependency-free matching-engine correctness tests, sanitizer builds, and
+the standalone in-process benchmark and reproducible profiling reports, see
+[`srcs/matching-engine/TESTING.md`](srcs/matching-engine/TESTING.md).
 
 ### Generate both language bindings
 
@@ -203,13 +207,15 @@ Create an order with decimal strings so the backend can apply the asset's precis
 
 ```protobuf
 message TradeEvent {
-  string tradeId = 1;
+  reserved 1;
   uint64 instrumentId = 2;
   uint64 buyOrderId = 3;
   uint64 sellOrderId = 4;
   uint64 price = 5;
   uint64 quantity = 6;
   int64 timestamp_epoch_millis = 7;
+  uint64 engineNamespace = 8;
+  uint64 executionId = 9;
 }
 ```
 
@@ -224,7 +230,7 @@ Local defaults point to `localhost`. Docker Compose overrides service-to-service
 | `MATCHING_ENGINE_HOST` | `localhost` | gRPC engine host |
 | `MATCHING_ENGINE_PORT` | `50051` | gRPC engine port |
 | `KAFKA_BOOTSTRAP_SERVERS` | `localhost:9092` | Backend Kafka address |
-| `MATCHING_ENGINE_KAFKA_BOOTSTRAP_SERVERS` | unset | Engine Kafka address; unset enables native no-op publishing |
+| `MATCHING_ENGINE_KAFKA_BOOTSTRAP_SERVERS` | unset | Engine Kafka address; production builds require Kafka support and a configured address |
 | `TRADE_EVENTS_TOPIC` | `trade-events` | Kafka topic |
 | `TRADE_EVENTS_CONSUMER_GROUP` | `mini-exchange-trades` | Backend consumer group |
 | `SPRING_DATASOURCE_URL` | dev profile default | PostgreSQL JDBC URL |
@@ -250,14 +256,14 @@ docker compose config
 docker compose build
 ```
 
-The full Compose flow was also exercised: asset registration over gRPC, matching buy/sell orders, Kafka trade settlement, filled order persistence, and consumer-offset replay without duplicate trades.
+The full Compose flow was validated with Docker; see `docs/END_TO_END_INTEGRATION_REPORT.md` for commands, results, and remaining reliability limitations.
 
 ## Design notes
 
 - The engine keeps only the most recent command's transient trade results; Kafka is the cross-service transport and PostgreSQL is the durable record.
 - The backend persists orders before sending them to the engine, ensuring engine commands carry stable database IDs.
-- Kafka delivery is treated as at-least-once. Idempotency is enforced at the trade UUID boundary.
-- Native builds without librdkafka use a no-op publisher fallback for engine-only development. The Docker image builds the real Kafka publisher.
+- Kafka delivery is treated as at-least-once. Idempotency is enforced at the `(engineNamespace, executionId)` boundary.
+- Native development builds may explicitly enable the no-op publisher with `ALLOW_NOOP_TRADE_PUBLISHER=ON`; production Kafka builds fail closed when librdkafka is unavailable.
 - Authentication, Kafka security, rate limiting, and a production dead-letter policy are intentionally outside this compact reference implementation.
 
 ## License

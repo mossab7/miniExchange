@@ -6,6 +6,8 @@ include(CTest)
 
 option(BUILD_GRPC "Build the gRPC transport and server" ON)
 option(BUILD_KAFKA "Build the librdkafka trade publisher when available" ON)
+option(ALLOW_NOOP_TRADE_PUBLISHER "Allow a no-op publisher when Kafka support is unavailable" OFF)
+option(BUILD_BENCHMARK "Build the standalone matching-engine benchmark" ON)
 
 set(MATCHING_ENGINE_SRC_DIR "${CMAKE_CURRENT_SOURCE_DIR}/src")
 
@@ -88,12 +90,14 @@ if(BUILD_GRPC)
         target_include_directories(matching_engine_kafka PUBLIC "${MATCHING_ENGINE_SRC_DIR}")
         target_link_libraries(matching_engine_kafka
             PUBLIC matching_engine_core exchange_proto PkgConfig::RDKAFKA_CPP)
-    else()
-        message(WARNING "librdkafka++ was not found; using the development no-op trade publisher")
+    elseif(NOT BUILD_KAFKA OR ALLOW_NOOP_TRADE_PUBLISHER)
+        message(WARNING "librdkafka++ was not found; using the explicitly selected no-op trade publisher")
         add_library(matching_engine_kafka STATIC src/engine/Trade/NullTradePublisher.cpp)
         target_compile_features(matching_engine_kafka PUBLIC cxx_std_20)
         target_include_directories(matching_engine_kafka PUBLIC "${MATCHING_ENGINE_SRC_DIR}")
         target_link_libraries(matching_engine_kafka PUBLIC matching_engine_core)
+    else()
+        message(FATAL_ERROR "librdkafka++ is required when BUILD_KAFKA=ON; set ALLOW_NOOP_TRADE_PUBLISHER=ON only for development")
     endif()
 
     add_library(matching_engine_grpc STATIC
@@ -117,4 +121,11 @@ if(BUILD_TESTING)
     target_compile_options(matching_engine_tests PRIVATE -Wall -Wextra -Wpedantic)
     target_link_libraries(matching_engine_tests PRIVATE matching_engine_core)
     add_test(NAME matching_engine_tests COMMAND matching_engine_tests)
+endif()
+
+if(BUILD_BENCHMARK)
+    add_executable(matching_engine_bench tests/engine_benchmark.cpp)
+    target_compile_features(matching_engine_bench PRIVATE cxx_std_20)
+    target_compile_options(matching_engine_bench PRIVATE -Wall -Wextra -Wpedantic)
+    target_link_libraries(matching_engine_bench PRIVATE matching_engine_core)
 endif()

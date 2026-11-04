@@ -10,7 +10,7 @@ class TradePublisher
 {
 public:
     virtual ~TradePublisher() = default;
-    virtual void publish(const Trade& trade, uint64_t instrumentId) = 0;
+    virtual void publish(const Execution& execution, uint64_t instrumentId) = 0;
 };
 
 std::shared_ptr<TradePublisher> createTradePublisherFromEnvironment();

@@ -38,7 +38,9 @@ public class KafkaTradeEventConsumer {
         Order buyOrder = orderService.getByIdSystem(toId(event.getBuyOrderId()));
 
         dev.miniExchange.trade.event.TradeEvent domainEvent = new dev.miniExchange.trade.event.TradeEvent(
-                UUID.fromString(event.getTradeId()),
+                null,
+                event.getEngineNamespace(),
+                event.getExecutionId(),
                 sellOrder.getUuid(),
                 buyOrder.getUuid(),
                 assetService.getByIdSystem(toId(event.getInstrumentId())).getSymbol(),

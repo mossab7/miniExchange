@@ -9,7 +9,7 @@ public:
     KafkaTradePublisher(const char* bootstrapServers, const char* topic);
     ~KafkaTradePublisher() override;
 
-    void publish(const Trade& trade, uint64_t instrumentId) override;
+    void publish(const Execution& execution, uint64_t instrumentId) override;
 
 private:
     class Impl;

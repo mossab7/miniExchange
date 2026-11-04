@@ -9,4 +9,5 @@ import java.util.UUID;
 
 public interface TradeRepository extends JpaRepository<Trade, Long> {
     Optional<Trade> findByUuid(UUID uuid);
+    Optional<Trade> findByEngineNamespaceAndExecutionId(Long engineNamespace, Long executionId);
 }

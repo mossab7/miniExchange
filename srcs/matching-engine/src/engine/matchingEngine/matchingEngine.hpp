@@ -57,7 +57,7 @@ private:
         bool success{false};
         bool resting{false};
         std::string reason;
-        std::vector<Trade> trades;
+        std::vector<Execution> executions;
         std::vector<uint64_t> filledOrderIds;
     };
 

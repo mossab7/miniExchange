@@ -65,11 +65,13 @@ message CancelOrderResponse
 // the serialized protobuf message produced by the matching engine.
 message TradeEvent
 {
-    string tradeId = 1;
+    reserved 1;
     uint64 instrumentId = 2;
     uint64 buyOrderId = 3;
     uint64 sellOrderId = 4;
     uint64 price = 5;
     uint64 quantity = 6;
     int64 timestamp_epoch_millis = 7;
+    uint64 engineNamespace = 8;
+    uint64 executionId = 9;
 }

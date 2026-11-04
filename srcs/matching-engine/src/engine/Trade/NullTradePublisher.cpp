@@ -8,7 +8,7 @@ namespace
 class NullTradePublisher final : public TradePublisher
 {
 public:
-    void publish(const Trade&, uint64_t) override
+    void publish(const Execution&, uint64_t) override
     {
         // This is intentionally a development fallback for hosts without the
         // librdkafka development package. Docker builds use KafkaPublisher.

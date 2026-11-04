@@ -40,6 +40,10 @@ build/
 # =========================
 *.log
 logs/
+benchmark-results/
+build-tests/
+build-asan-ubsan/
+build-tsan/
 
 # =========================
 # OS files

@@ -1,6 +1,9 @@
 #include "OrderBook.hpp"
 
 #include <algorithm>
+#include <atomic>
+#include <chrono>
+#include <random>
 #include <utility>
 
 OrderBook::OrderBook() = default;
@@ -52,7 +55,24 @@ void OrderBook::recordTrade(const Order* incomingOrder, const Order* restingOrde
     const bool incomingIsBuyer = incomingOrder->getSide() == Side::BUYER;
     const uint64_t buyOrderId = incomingIsBuyer ? incomingOrder->getId() : restingOrder->getId();
     const uint64_t sellOrderId = incomingIsBuyer ? restingOrder->getId() : incomingOrder->getId();
-    lastTrades_.emplace_back(buyOrderId, sellOrderId, restingOrder->getPrice(), quantity);
+    static std::atomic<uint64_t> nextExecutionId{1};
+    static const uint64_t engineNamespace = [] {
+        try {
+            std::random_device random;
+            // Keep the namespace in PostgreSQL BIGINT/Java long's positive
+            // range while retaining a 63-bit per-engine namespace.
+            return ((static_cast<uint64_t>(random()) << 32) | random()) & 0x7fffffffffffffffULL;
+        }
+        catch (...) {
+            return static_cast<uint64_t>(std::chrono::steady_clock::now().time_since_epoch().count())
+                & 0x7fffffffffffffffULL;
+        }
+    }();
+    lastExecutions_.push_back({engineNamespace, nextExecutionId.fetch_add(1, std::memory_order_relaxed), buyOrderId,
+                               sellOrderId,
+                               static_cast<uint64_t>(std::chrono::duration_cast<std::chrono::milliseconds>(
+                                   std::chrono::system_clock::now().time_since_epoch()).count()),
+                               restingOrder->getPrice(), quantity});
 }
 
 PriceLevel* OrderBook::getPriceLevel(Order* order)
@@ -95,7 +115,8 @@ uint64_t OrderBook::getBestAskPrice()
 bool OrderBook::submitOrder(const SubmitOrderRequest &request)
 {
     lastFilledOrderIds_.clear();
-    lastTrades_.clear();
+    lastExecutions_.clear();
+    compatibilityTrades_.clear();
     const bool validSide = request.side == Side::BUYER || request.side == Side::SELLER;
     if (request.id == 0 || request.price == 0 || request.quantity == 0 || !validSide || containsOrder(request.id))
     {
@@ -268,7 +289,18 @@ bool OrderBook::containsOrder(uint64_t orderId) const
 
 const std::vector<Trade>& OrderBook::getTrades() const
 {
-    return lastTrades_;
+    compatibilityTrades_.clear();
+    compatibilityTrades_.reserve(lastExecutions_.size());
+    for (const auto& execution : lastExecutions_)
+    {
+        compatibilityTrades_.emplace_back(execution);
+    }
+    return compatibilityTrades_;
+}
+
+const std::vector<Execution>& OrderBook::getExecutions() const
+{
+    return lastExecutions_;
 }
 
 const std::vector<uint64_t>& OrderBook::getLastFilledOrderIds() const

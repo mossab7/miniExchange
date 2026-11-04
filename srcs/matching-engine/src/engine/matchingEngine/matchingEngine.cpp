@@ -120,7 +120,7 @@ private:
             return {true,
                     book->second->containsOrder(item.request.id),
                     {},
-                    book->second->getTrades(),
+                    book->second->getExecutions(),
                     book->second->getLastFilledOrderIds()};
         }
 
@@ -145,7 +145,7 @@ private:
             {
                 return {false, false, "instrument is not configured", {}, {}};
             }
-            return {true, false, {}, book->second->getTrades(), {}};
+            return {true, false, {}, book->second->getExecutions(), {}};
         }
         }
 
@@ -335,9 +335,9 @@ bool MatchingEngine::submitOrder(const SubmitOrderRequest& request, std::string*
     {
         try
         {
-            for (const Trade& trade : result.trades)
+            for (const Execution& execution : result.executions)
             {
-                tradePublisher_->publish(trade, request.instrumentId);
+                tradePublisher_->publish(execution, request.instrumentId);
             }
         }
         catch (const std::exception& exception)
@@ -429,7 +429,13 @@ std::vector<Trade> MatchingEngine::getTrades(uint64_t instrumentId) const
     {
         return {};
     }
-    return std::move(result.trades);
+    std::vector<Trade> trades;
+    trades.reserve(result.executions.size());
+    for (const auto& execution : result.executions)
+    {
+        trades.emplace_back(execution);
+    }
+    return trades;
 }
 
 std::size_t MatchingEngine::workerCount() const noexcept

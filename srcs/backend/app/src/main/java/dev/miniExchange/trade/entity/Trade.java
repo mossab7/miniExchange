@@ -30,6 +30,12 @@ public class Trade {
 
     @Column(unique = true, nullable = false, updatable = false)
     private UUID uuid;
+
+    @Column(name = "engine_namespace")
+    private Long engineNamespace;
+
+    @Column(name = "execution_id")
+    private Long executionId;
     
     @PrePersist
     void PrePersist()
@@ -73,6 +79,10 @@ public class Trade {
     public void setUuid(UUID uuid) {
         this.uuid = uuid;
     }
+    public Long getEngineNamespace() { return engineNamespace; }
+    public void setEngineNamespace(Long engineNamespace) { this.engineNamespace = engineNamespace; }
+    public Long getExecutionId() { return executionId; }
+    public void setExecutionId(Long executionId) { this.executionId = executionId; }
     public Portfolio getBuyer() {
         return buyer;
     }

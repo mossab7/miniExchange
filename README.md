@@ -82,6 +82,21 @@ The API is therefore intentionally asynchronous after submission: an order can b
 └── README.md
 ```
 
+### Frontend
+
+MiniExchange includes a React + TypeScript trading terminal in [`frontend/`](frontend/). It uses Vite, React Router, TanStack Query, Axios, React Hook Form, Zod, Lucide icons, and a dark responsive terminal layout.
+
+The frontend provides:
+
+- JWT login, registration, protected routes, logout, and session-expiration handling;
+- a trading terminal with backend-backed asset selection and limit-order placement;
+- order history and cancellation for cancelable orders;
+- portfolio balance and account views;
+- an admin workspace at `/admin` for creating assets and enabling or disabling assets when the JWT contains the `ADMIN` role;
+- explicit unavailable states for backend capabilities that are not currently exposed, including order-book data, historical prices, positions, trade history, WebSocket/SSE feeds, and operational analytics.
+
+The API base URL is configured with `VITE_API_BASE_URL` and defaults to `/api`. Vite proxies `/api` to `http://localhost:8080` during development. Frontend source, tests, and setup instructions are documented in [`frontend/README.md`](frontend/README.md).
+
 Generated bindings are build outputs. The source of truth is [`proto/miniExchange.proto`](proto/miniExchange.proto).
 
 ## Quick start with Docker

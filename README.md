@@ -112,6 +112,25 @@ Stop the stack:
 docker compose down
 ```
 
+### One-command development
+
+From the repository root, `make` starts PostgreSQL, Kafka, the matching engine, and the Spring Boot backend through Docker Compose, then starts the Vite frontend at `http://localhost:5173`:
+
+```bash
+make
+```
+
+Useful Make targets:
+
+```bash
+make up               # Start backend infrastructure in the background
+make frontend         # Start the frontend only
+make frontend-build   # Build the frontend for production
+make frontend-test    # Run frontend tests
+make logs             # Follow Docker Compose logs
+make down             # Stop Docker services
+```
+
 To remove the local database volume as well, use `docker compose down -v`. This deletes local PostgreSQL data.
 
 ## Native development

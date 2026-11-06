@@ -50,3 +50,7 @@ build-tsan/
 # =========================
 .DS_Store
 Thumbs.db
+# Frontend dependencies and generated output
+frontend/node_modules/
+frontend/dist/
+frontend/tsconfig.tsbuildinfo

@@ -1,0 +1,9 @@
+import axios from 'axios';
+export const api=axios.create({baseURL:import.meta.env.VITE_API_BASE_URL||'/api',headers:{'Content-Type':'application/json'}});
+api.interceptors.request.use(config=>{const token=localStorage.getItem('mini_exchange_token'); if(token) config.headers.Authorization=`Bearer ${token}`; return config});
+api.interceptors.response.use(r=>r,e=>{if(e.response?.status===401){localStorage.removeItem('mini_exchange_token'); window.dispatchEvent(new Event('auth-expired'))} return Promise.reject(e)});
+export type Asset={symbol:string;name:string;decimalPlaces:number;isActive:boolean;assetUuid:string};
+export type Order={id:number;symbol:string;quoteSymbol:string;price:string;quantity:string;side:'BUY'|'SELL';status:string;createdAt:string};
+export type Portfolio={portfolioId:string;userId:string;name:string;description:string;availableBalance:string|number;lockedBalance:string|number;totalBalance:string|number;createdAt:string;updatedAt:string};
+export const endpoints={assets:()=>api.get<Asset[]>('/assets').then(r=>r.data),orders:()=>api.get<Order[]>('/orders').then(r=>r.data),portfolio:(name='default portfolio')=>api.get<Portfolio>(`/portfolios/${encodeURIComponent(name)}`).then(r=>r.data),place:(body:unknown)=>api.post<Order>('/orders',body).then(r=>r.data),cancel:(id:string|number)=>api.delete(`/orders/${id}`),createAsset:(body:unknown)=>api.post<Asset>('/assets',body).then(r=>r.data),updateAsset:(symbol:string,body:unknown)=>api.put<Asset>(`/assets/${encodeURIComponent(symbol)}`,body).then(r=>r.data)};
+export function errorMessage(e:unknown){const x=e as {response?:{data?:{message?:string}};request?:unknown}; if(x.response?.data?.message)return x.response.data.message; if(x.request&&!x.response)return 'The MiniExchange backend is unavailable. Start Spring Boot on http://localhost:8080 and try again.'; return 'The backend could not complete that request.'}

@@ -1,18 +1,780 @@
-// @ts-nocheck
-import {useEffect,useState} from 'react'; import {Link,NavLink,Navigate,Route,Routes,useLocation,useNavigate} from 'react-router-dom'; import {Activity,ArrowDownToLine,ArrowUpFromLine,BookOpen,ChevronDown,Command,Database,LogOut,Menu,PanelLeftClose,Plus,Search,Server,Settings2,ShieldCheck,Wallet, X} from 'lucide-react'; import {useQuery,useMutation,useQueryClient} from '@tanstack/react-query'; import {useForm} from 'react-hook-form'; import {z} from 'zod'; import {zodResolver} from '@hookform/resolvers/zod'; import {api,endpoints,errorMessage,Order,Asset} from './lib/api';
-const money=(v:unknown)=>typeof v==='number'?v.toLocaleString(undefined,{minimumFractionDigits:2,maximumFractionDigits:2}):String(v??'—');
-function Protected({children}:{children:React.ReactNode}){return localStorage.getItem('mini_exchange_token')?<>{children}</>:<Navigate to="/login" replace/>}
-function isAdmin(){try{const token=localStorage.getItem('mini_exchange_token'); if(!token)return false; const payload=JSON.parse(atob(token.split('.')[1].replace(/-/g,'+').replace(/_/g,'/'))); return payload.role==='ADMIN'}catch{return false}}
-function AdminProtected({children}:{children:React.ReactNode}){return isAdmin()?<>{children}</>:<Navigate to="/trade" replace/>}
-function Auth({signup=false}:{signup?:boolean}){const nav=useNavigate(); const [error,setError]=useState(''); const schema=z.object({username:z.string().min(3),password:z.string().min(6),...(signup?{email:z.string().email()}: {})}); const {register,handleSubmit,formState:{errors,isSubmitting}}=useForm<any>({resolver:zodResolver(schema)}); const submit=async(v:any)=>{try{const r=await api.post(`/auth/${signup?'signup':'login'}`,v); localStorage.setItem('mini_exchange_token',r.data.token); nav('/trade')}catch(e){setError(errorMessage(e))}}; return <main className="auth"><div className="auth-card"><div className="brand-mark"><Command size={20}/></div><div className="eyebrow">MINIEXCHANGE / TERMINAL</div><h1>{signup?'Create your account':'Welcome back'}</h1><p className="muted">{signup?'Open a secure workspace for your exchange account.':'Sign in to access your trading workspace.'}</p><form onSubmit={handleSubmit(submit)}>{signup&&<Field label="Email" error={errors.email?.message}><input {...register('email')} placeholder="you@example.com"/></Field>}<Field label="Username" error={errors.username?.message}><input {...register('username')} placeholder="your username"/></Field><Field label="Password" error={errors.password?.message}><input type="password" {...register('password')} placeholder="••••••••"/></Field>{error&&<div className="error">{error}</div>}<button className="primary full" disabled={isSubmitting}>{isSubmitting?'Connecting…':signup?'Create account':'Sign in'} <ArrowUpFromLine size={16}/></button></form><p className="auth-switch">{signup?'Already have an account? ':'Need an account? '}<Link to={signup?'/login':'/register'}>{signup?'Sign in':'Register'}</Link></p></div><div className="auth-aside"><div className="signal"><span/> backend contract connected</div><h2>A trading terminal<br/><em>built for precision.</em></h2><p>Order placement, portfolio state, and account data stay anchored to the MiniExchange API.</p></div></main>}
-function Field({label,error,children}:{label:string;error?:unknown;children:React.ReactNode}){return <label className="field"><span>{label}</span>{children}{error&&<small>{String(error)}</small>}</label>}
-function Shell(){const loc=useLocation(); const nav=useNavigate(); const [open,setOpen]=useState(false); useEffect(()=>{const f=()=>nav('/login'); window.addEventListener('auth-expired',f); return()=>window.removeEventListener('auth-expired',f)},[nav]); const logout=()=>{localStorage.removeItem('mini_exchange_token');nav('/login')}; const page=loc.pathname.includes('portfolio')?'Portfolio':loc.pathname.includes('orders')?'Orders':'Trading terminal'; return <div className="shell"><aside className={open?'open':''}><div className="logo"><div className="brand-mark"><Command size={18}/></div><span>mini<span>exchange</span></span></div><div className="workspace"><span className="dot"/> PAPER / LOCAL <ChevronDown size={13}/></div><nav><NavLink to="/trade"><Activity size={17}/>Trade</NavLink><NavLink to="/portfolio"><Wallet size={17}/>Portfolio</NavLink><NavLink to="/orders"><BookOpen size={17}/>Orders</NavLink></nav><div className="side-foot"><NavLink to="/account"><Settings2 size={17}/>Account</NavLink><button onClick={logout}><LogOut size={17}/>Sign out</button></div></aside><div className="main"><header><button className="mobile-menu" onClick={()=>setOpen(!open)}>{open?<X/>:<Menu/>}</button><div><div className="eyebrow">WORKSPACE / {page.toUpperCase()}</div><h2>{page}</h2></div><div className="header-right"><div className="connection"><span className="dot"/> API connected</div><div className="avatar">MK</div></div></header><div className="content"><Routes><Route path="/trade" element={<Trade/>}/><Route path="/portfolio" element={<PortfolioPage/>}/><Route path="/orders" element={<OrdersPage/>}/><Route path="/account" element={<Account/>}/><Route path="*" element={<Navigate to="/trade"/>}/></Routes></div></div></div>}
-function Trade(){const [selected,setSelected]=useState(''); const assets=useQuery({queryKey:['assets'],queryFn:endpoints.assets}); const orders=useQuery({queryKey:['orders'],queryFn:endpoints.orders}); const active=assets.data?.find(a=>a.symbol===selected)||assets.data?.[0]; useEffect(()=>{if(active&&!selected)setSelected(active.symbol)},[active,selected]); return <div className="trade-grid"><section className="market-rail panel"><div className="panel-title"><span>Markets</span><span className="count">{assets.data?.length||0}</span></div><div className="search"><Search size={15}/><input placeholder="Search markets"/></div>{assets.isLoading?<Skeleton/>:assets.data?.length?<div className="market-list">{assets.data.map(a=><button className={a.symbol===active?.symbol?'market active':'market'} onClick={()=>setSelected(a.symbol)} key={a.assetUuid}><span><b>{a.symbol}</b><small>{a.name}</small></span><span className="muted">—</span></button>)}</div>:<Empty title="No markets listed" body="Assets created in the backend will appear here."/>}</section><section className="center-stack"><div className="instrument panel"><div><div className="instrument-name"><span className="coin">{active?.symbol?.slice(0,1)||'—'}</span><strong>{active?.symbol||'Select a market'}</strong><span className="badge">SPOT</span></div><div className="muted">{active?.name||'Market data unavailable'}</div></div><div className="instrument-stats"><span>Last price <b>—</b></span><span>24h change <b className="muted">—</b></span><span>24h volume <b>—</b></span></div></div><div className="chart panel"><div className="panel-title"><span>Price chart</span><div className="timeframes"><button className="selected">1D</button><button>1W</button><button>1M</button></div></div><div className="chart-empty"><Activity size={25}/><strong>Historical market data unavailable</strong><span>The API currently exposes assets and orders only. Add a market-data endpoint to enable charting.</span></div></div><div className="panel orders-strip"><div className="panel-title"><span>Recent orders</span><Link to="/orders">View all</Link></div><OrdersTable orders={(orders.data||[]).slice(0,4)} loading={orders.isLoading}/></div></section><section className="right-stack"><OrderTicket asset={active} portfolioId={undefined}/><div className="panel book"><div className="panel-title"><span>Order book</span><span className="live-pill">UNAVAILABLE</span></div><Empty title="No order book feed" body="The backend has no REST or streaming order-book endpoint."/></div></section></div>}
-function OrderTicket({asset,portfolioId}:{asset?:Asset;portfolioId?:string}){const qc=useQueryClient(); const [side,setSide]=useState<'BUY'|'SELL'>('BUY'); const [message,setMessage]=useState(''); const schema=z.object({price:z.string().regex(/^\d+(\.\d+)?$/,'Enter a valid decimal price'),quantity:z.string().regex(/^\d+(\.\d+)?$/,'Enter a valid decimal quantity')}); const {register,handleSubmit,reset,formState:{errors}}=useForm({resolver:zodResolver(schema)}); const m=useMutation({mutationFn:(v:any)=>endpoints.place({portfolioId,market:asset?.symbol||'',price:v.price,quantity:v.quantity,side}),onSuccess:()=>{setMessage('Order submitted');reset();qc.invalidateQueries({queryKey:['orders']})},onError:e=>setMessage(errorMessage(e))}); return <div className="panel ticket"><div className="panel-title"><span>Place order</span><span className="badge">LIMIT</span></div><div className="side-tabs"><button className={side==='BUY'?'buy selected':''} onClick={()=>setSide('BUY')}>Buy</button><button className={side==='SELL'?'sell selected':''} onClick={()=>setSide('SELL')}>Sell</button></div><div className="order-context"><span>Instrument</span><b>{asset?.symbol||'Select a market'}</b></div><form onSubmit={handleSubmit(v=>m.mutate(v))}><Field label="Price" error={errors.price?.message}><div className="input-suffix"><input inputMode="decimal" {...register('price')} placeholder="0.00"/><span>USD</span></div></Field><Field label="Quantity" error={errors.quantity?.message}><div className="input-suffix"><input inputMode="decimal" {...register('quantity')} placeholder="0.00000000"/><span>{asset?.symbol?.split('/')[0]||'BASE'}</span></div></Field><div className="estimate"><span>Estimated value</span><b>—</b></div>{message&&<div className={message==='Order submitted'?'success':'error'}>{message}</div>}<button className={side==='BUY'?'buy-action':'sell-action'} disabled={m.isPending||!asset||!portfolioId}>{m.isPending?'Submitting…':`${side === 'BUY'?'Buy':'Sell'} ${asset?.symbol?.split('/')[0]||'asset'}`}</button>{!portfolioId&&<p className="hint">Create or select a portfolio before placing an order.</p>}</form></div>}
-function OrdersPage(){const q=useQuery({queryKey:['orders'],queryFn:endpoints.orders}); const qc=useQueryClient(); const cancel=useMutation({mutationFn:endpoints.cancel,onSuccess:()=>qc.invalidateQueries({queryKey:['orders']})}); return <div className="page-grid"><section className="panel wide"><div className="panel-title"><span>Order history</span><div className="filters"><button className="selected">All</button><button>Open</button><button>Filled</button><button>Canceled</button></div></div><OrdersTable orders={q.data||[]} loading={q.isLoading} onCancel={id=>cancel.mutate(id)}/></section><section className="panel note"><ShieldCheck size={20}/><strong>Order lifecycle</strong><p>Orders are persisted by Spring Boot before being sent to the C++ matching engine. Matching is asynchronous, so status can remain OPEN briefly after submission.</p></section></div>}
-function OrdersTable({orders,loading,onCancel}:{orders:Order[];loading:boolean;onCancel?:(id:number)=>void}){if(loading)return <Skeleton/>; if(!orders.length)return <Empty title="No orders yet" body="Your submitted orders will be listed here."/>; return <div className="table-scroll"><table><thead><tr><th>Market</th><th>Side</th><th>Price</th><th>Quantity</th><th>Status</th><th>Created</th><th/></tr></thead><tbody>{orders.map(o=><tr key={o.id}><td><b>{o.symbol}/{o.quoteSymbol}</b></td><td><span className={o.side==='BUY'?'positive':'negative'}>{o.side}</span></td><td className="numeric">{o.price}</td><td className="numeric">{o.quantity}</td><td><span className="status">{o.status}</span></td><td className="muted">{new Date(o.createdAt).toLocaleString()}</td><td>{onCancel&&['OPEN','PARTIALLY_FILLED'].includes(o.status)&&<button className="text-button" onClick={()=>onCancel(o.id)}>Cancel</button>}</td></tr>)}</tbody></table></div>}
-function PortfolioPage(){const q=useQuery({queryKey:['portfolio'],queryFn:()=>endpoints.portfolio()}); return <div className="page-grid"><section className="panel balance-card"><div className="eyebrow">DEFAULT PORTFOLIO</div><h1>{q.isLoading?'—':money(q.data?.totalBalance)} <small>USD</small></h1><div className="balance-line"><span><i className="green-dot"/>Available <b>{money(q.data?.availableBalance)}</b></span><span><i className="amber-dot"/>Locked <b>{money(q.data?.lockedBalance)}</b></span></div></section><section className="panel wide"><div className="panel-title"><span>Holdings</span><span className="live-pill">BACKEND DATA ONLY</span></div><Empty title="Positions endpoint unavailable" body="The current API exposes portfolio balances but not asset positions or valuation prices."/></section></div>}
-function Account(){return <div className="page-grid"><section className="panel account-card"><div className="avatar large">MK</div><div><div className="eyebrow">ACCOUNT</div><h1>MiniExchange user</h1><p className="muted">JWT session is stored locally for this browser.</p></div></section><section className="panel note"><Settings2 size={20}/><strong>Preferences</strong><p>Theme is fixed to the terminal dark theme. Profile update and refresh-token endpoints are not exposed by the backend.</p></section></div>}
-function AdminPage(){const qc=useQueryClient(); const assets=useQuery({queryKey:['assets'],queryFn:endpoints.assets}); const [notice,setNotice]=useState(''); const schema=z.object({symbol:z.string().min(1).max(4).regex(/^[A-Za-z0-9]+$/),name:z.string().min(1),decimalPlaces:z.coerce.number().int().min(0).max(18),isActive:z.boolean()}); const {register,handleSubmit,reset,formState:{errors}}=useForm({resolver:zodResolver(schema),defaultValues:{isActive:true,decimalPlaces:8}}); const create=useMutation({mutationFn:endpoints.createAsset,onSuccess:()=>{setNotice('Asset created');reset({isActive:true,decimalPlaces:8});qc.invalidateQueries({queryKey:['assets']})},onError:e=>setNotice(errorMessage(e))}); const update=useMutation({mutationFn:({symbol,body}:{symbol:string;body:unknown})=>endpoints.updateAsset(symbol,body),onSuccess:()=>{setNotice('Asset updated');qc.invalidateQueries({queryKey:['assets']})},onError:e=>setNotice(errorMessage(e))}); return <div className="admin-grid"><section className="admin-stats"><div className="panel admin-stat"><Server size={18}/><span>API status</span><strong>Connected</strong><small>Protected endpoint reachable</small></div><div className="panel admin-stat"><Database size={18}/><span>Registered assets</span><strong>{assets.data?.length??'—'}</strong><small>From /api/assets</small></div><div className="panel admin-stat"><Activity size={18}/><span>Market telemetry</span><strong>Unavailable</strong><small>No monitoring endpoint exposed</small></div></section><section className="panel admin-form"><div className="panel-title"><span>Add asset</span><span className="badge">ADMIN ONLY</span></div><form onSubmit={handleSubmit(v=>create.mutate(v))}><div className="form-row"><Field label="Symbol" error={errors.symbol?.message}><input {...register('symbol')} placeholder="BTC"/></Field><Field label="Name" error={errors.name?.message}><input {...register('name')} placeholder="Bitcoin"/></Field></div><div className="form-row"><Field label="Decimal places" error={errors.decimalPlaces?.message}><input type="number" {...register('decimalPlaces')} placeholder="8"/></Field><label className="check"><input type="checkbox" {...register('isActive')}/> Active for trading</label></div>{notice&&<div className={notice.includes('created')||notice.includes('updated')?'success':'error'}>{notice}</div>}<button className="primary" disabled={create.isPending}><Plus size={16}/>{create.isPending?'Creating…':'Create asset'}</button></form></section><section className="panel asset-list-admin"><div className="panel-title"><span>Asset registry</span><span className="live-pill">LIVE API DATA</span></div>{assets.isLoading?<Skeleton/>:!assets.data?.length?<Empty title="No assets" body="Create the first tradable asset above."/>:<div className="table-scroll"><table><thead><tr><th>Symbol</th><th>Name</th><th>Precision</th><th>Status</th><th/></tr></thead><tbody>{assets.data.map(a=><tr key={a.assetUuid}><td><b>{a.symbol}</b></td><td>{a.name}</td><td className="numeric">{a.decimalPlaces}</td><td><span className={a.isActive?'positive':'muted'}>{a.isActive?'ACTIVE':'INACTIVE'}</span></td><td><button className="text-button" onClick={()=>update.mutate({symbol:a.symbol,body:{symbol:a.symbol,name:a.name,decimalPlaces:a.decimalPlaces,isActive:!a.isActive}})}>{a.isActive?'Disable':'Enable'}</button></td></tr>)}</tbody></table></div>}</section><section className="panel note"><ShieldCheck size={20}/><strong>Monitoring scope</strong><p>The current backend does not expose admin metrics, user counts, trade volume, engine health, audit logs, or website analytics. This dashboard monitors API reachability and the asset registry without fabricating operational data.</p></section></div>}
-function Empty({title,body}:{title:string;body:string}){return <div className="empty"><div className="empty-icon"><PanelLeftClose size={18}/></div><strong>{title}</strong><span>{body}</span></div>}; function Skeleton(){return <div className="skeleton"><i/><i/><i/></div>}
-export default function App(){return <Routes><Route path="/login" element={<Auth/>}/><Route path="/register" element={<Auth signup/>}/><Route path="/admin" element={<Protected><AdminProtected><AdminPage/></AdminProtected></Protected>}/><Route path="*" element={<Protected><Shell/></Protected>}/></Routes>}
+import { useEffect, useState } from 'react';
+import { Link, NavLink, Navigate, Route, Routes, useLocation, useNavigate } from 'react-router-dom';
+import {
+  Activity,
+  ArrowDownToLine,
+  ArrowUpFromLine,
+  BookOpen,
+  ChevronDown,
+  Command,
+  Database,
+  LogOut,
+  Menu,
+  PanelLeftClose,
+  Plus,
+  Search,
+  Server,
+  Settings2,
+  ShieldCheck,
+  Wallet,
+  X,
+} from 'lucide-react';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useForm } from 'react-hook-form';
+import { z } from 'zod';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { api, endpoints, errorMessage, Order, Asset } from './lib/api';
+const money = (v: unknown) =>
+  typeof v === 'number'
+    ? v.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })
+    : String(v ?? '—');
+function Protected({ children }: { children: React.ReactNode }) {
+  return localStorage.getItem('mini_exchange_token') ? (
+    <>{children}</>
+  ) : (
+    <Navigate to="/login" replace />
+  );
+}
+function isAdmin() {
+  try {
+    const token = localStorage.getItem('mini_exchange_token');
+    if (!token) return false;
+    const payload = JSON.parse(atob(token.split('.')[1].replace(/-/g, '+').replace(/_/g, '/')));
+    return payload.role === 'ADMIN';
+  } catch {
+    return false;
+  }
+}
+function AdminProtected({ children }: { children: React.ReactNode }) {
+  return isAdmin() ? <>{children}</> : <Navigate to="/trade" replace />;
+}
+function Auth({ signup = false }: { signup?: boolean }) {
+  const nav = useNavigate();
+  const [error, setError] = useState('');
+  const schema = z.object({
+    username: z.string().min(3),
+    password: z.string().min(6),
+    ...(signup ? { email: z.string().email() } : {}),
+  });
+  const {
+    register,
+    handleSubmit,
+    formState: { errors, isSubmitting },
+  } = useForm<any>({ resolver: zodResolver(schema) });
+  const submit = async (v: any) => {
+    try {
+      const r = await api.post(`/auth/${signup ? 'signup' : 'login'}`, v);
+      localStorage.setItem('mini_exchange_token', r.data.token);
+      nav('/trade');
+    } catch (e) {
+      setError(errorMessage(e));
+    }
+  };
+  return (
+    <main className="auth">
+      <div className="auth-card">
+        <div className="brand-mark">
+          <Command size={20} />
+        </div>
+        <div className="eyebrow">MINIEXCHANGE / TERMINAL</div>
+        <h1>{signup ? 'Create your account' : 'Welcome back'}</h1>
+        <p className="muted">
+          {signup
+            ? 'Open a secure workspace for your exchange account.'
+            : 'Sign in to access your trading workspace.'}
+        </p>
+        <form onSubmit={handleSubmit(submit)}>
+          {signup && (
+            <Field label="Email" error={errors.email?.message}>
+              <input {...register('email')} placeholder="you@example.com" />
+            </Field>
+          )}
+          <Field label="Username" error={errors.username?.message}>
+            <input {...register('username')} placeholder="your username" />
+          </Field>
+          <Field label="Password" error={errors.password?.message}>
+            <input type="password" {...register('password')} placeholder="••••••••" />
+          </Field>
+          {error && <div className="error">{error}</div>}
+          <button className="primary full" disabled={isSubmitting}>
+            {isSubmitting ? 'Connecting…' : signup ? 'Create account' : 'Sign in'}{' '}
+            <ArrowUpFromLine size={16} />
+          </button>
+        </form>
+        <p className="auth-switch">
+          {signup ? 'Already have an account? ' : 'Need an account? '}
+          <Link to={signup ? '/login' : '/register'}>{signup ? 'Sign in' : 'Register'}</Link>
+        </p>
+      </div>
+      <div className="auth-aside">
+        <div className="signal">
+          <span /> backend contract connected
+        </div>
+        <h2>
+          A trading terminal
+          <br />
+          <em>built for precision.</em>
+        </h2>
+        <p>
+          Order placement, portfolio state, and account data stay anchored to the MiniExchange API.
+        </p>
+      </div>
+    </main>
+  );
+}
+function Field({
+  label,
+  error,
+  children,
+}: {
+  label: string;
+  error?: unknown;
+  children: React.ReactNode;
+}) {
+  return (
+    <label className="field">
+      <span>{label}</span>
+      {children}
+      {error && <small>{String(error)}</small>}
+    </label>
+  );
+}
+function Shell() {
+  const loc = useLocation();
+  const nav = useNavigate();
+  const [open, setOpen] = useState(false);
+  useEffect(() => {
+    const f = () => nav('/login');
+    window.addEventListener('auth-expired', f);
+    return () => window.removeEventListener('auth-expired', f);
+  }, [nav]);
+  const logout = () => {
+    localStorage.removeItem('mini_exchange_token');
+    nav('/login');
+  };
+  const page = loc.pathname.includes('portfolio')
+    ? 'Portfolio'
+    : loc.pathname.includes('orders')
+      ? 'Orders'
+      : 'Trading terminal';
+  return (
+    <div className="shell">
+      <aside className={open ? 'open' : ''}>
+        <div className="logo">
+          <div className="brand-mark">
+            <Command size={18} />
+          </div>
+          <span>
+            mini<span>exchange</span>
+          </span>
+        </div>
+        <div className="workspace">
+          <span className="dot" /> PAPER / LOCAL <ChevronDown size={13} />
+        </div>
+        <nav>
+          <NavLink to="/trade">
+            <Activity size={17} />
+            Trade
+          </NavLink>
+          <NavLink to="/portfolio">
+            <Wallet size={17} />
+            Portfolio
+          </NavLink>
+          <NavLink to="/orders">
+            <BookOpen size={17} />
+            Orders
+          </NavLink>
+        </nav>
+        <div className="side-foot">
+          <NavLink to="/account">
+            <Settings2 size={17} />
+            Account
+          </NavLink>
+          <button onClick={logout}>
+            <LogOut size={17} />
+            Sign out
+          </button>
+        </div>
+      </aside>
+      <div className="main">
+        <header>
+          <button className="mobile-menu" onClick={() => setOpen(!open)}>
+            {open ? <X /> : <Menu />}
+          </button>
+          <div>
+            <div className="eyebrow">WORKSPACE / {page.toUpperCase()}</div>
+            <h2>{page}</h2>
+          </div>
+          <div className="header-right">
+            <div className="connection">
+              <span className="dot" /> API connected
+            </div>
+            <div className="avatar">MK</div>
+          </div>
+        </header>
+        <div className="content">
+          <Routes>
+            <Route path="/trade" element={<Trade />} />
+            <Route path="/portfolio" element={<PortfolioPage />} />
+            <Route path="/orders" element={<OrdersPage />} />
+            <Route path="/account" element={<Account />} />
+            <Route path="*" element={<Navigate to="/trade" />} />
+          </Routes>
+        </div>
+      </div>
+    </div>
+  );
+}
+function Trade() {
+  const [selected, setSelected] = useState('');
+  const assets = useQuery({ queryKey: ['assets'], queryFn: endpoints.assets });
+  const orders = useQuery({ queryKey: ['orders'], queryFn: endpoints.orders });
+  const active = assets.data?.find((a) => a.symbol === selected) || assets.data?.[0];
+  useEffect(() => {
+    if (active && !selected) setSelected(active.symbol);
+  }, [active, selected]);
+  return (
+    <div className="trade-grid">
+      <section className="market-rail panel">
+        <div className="panel-title">
+          <span>Markets</span>
+          <span className="count">{assets.data?.length || 0}</span>
+        </div>
+        <div className="search">
+          <Search size={15} />
+          <input placeholder="Search markets" />
+        </div>
+        {assets.isLoading ? (
+          <Skeleton />
+        ) : assets.data?.length ? (
+          <div className="market-list">
+            {assets.data.map((a) => (
+              <button
+                className={a.symbol === active?.symbol ? 'market active' : 'market'}
+                onClick={() => setSelected(a.symbol)}
+                key={a.assetUuid}
+              >
+                <span>
+                  <b>{a.symbol}</b>
+                  <small>{a.name}</small>
+                </span>
+                <span className="muted">—</span>
+              </button>
+            ))}
+          </div>
+        ) : (
+          <Empty title="No markets listed" body="Assets created in the backend will appear here." />
+        )}
+      </section>
+      <section className="center-stack">
+        <div className="instrument panel">
+          <div>
+            <div className="instrument-name">
+              <span className="coin">{active?.symbol?.slice(0, 1) || '—'}</span>
+              <strong>{active?.symbol || 'Select a market'}</strong>
+              <span className="badge">SPOT</span>
+            </div>
+            <div className="muted">{active?.name || 'Market data unavailable'}</div>
+          </div>
+          <div className="instrument-stats">
+            <span>
+              Last price <b>—</b>
+            </span>
+            <span>
+              24h change <b className="muted">—</b>
+            </span>
+            <span>
+              24h volume <b>—</b>
+            </span>
+          </div>
+        </div>
+        <div className="chart panel">
+          <div className="panel-title">
+            <span>Price chart</span>
+            <div className="timeframes">
+              <button className="selected">1D</button>
+              <button>1W</button>
+              <button>1M</button>
+            </div>
+          </div>
+          <div className="chart-empty">
+            <Activity size={25} />
+            <strong>Historical market data unavailable</strong>
+            <span>
+              The API currently exposes assets and orders only. Add a market-data endpoint to enable
+              charting.
+            </span>
+          </div>
+        </div>
+        <div className="panel orders-strip">
+          <div className="panel-title">
+            <span>Recent orders</span>
+            <Link to="/orders">View all</Link>
+          </div>
+          <OrdersTable orders={(orders.data || []).slice(0, 4)} loading={orders.isLoading} />
+        </div>
+      </section>
+      <section className="right-stack">
+        <OrderTicket asset={active} portfolioId={undefined} />
+        <div className="panel book">
+          <div className="panel-title">
+            <span>Order book</span>
+            <span className="live-pill">UNAVAILABLE</span>
+          </div>
+          <Empty
+            title="No order book feed"
+            body="The backend has no REST or streaming order-book endpoint."
+          />
+        </div>
+      </section>
+    </div>
+  );
+}
+function OrderTicket({ asset, portfolioId }: { asset?: Asset; portfolioId?: string }) {
+  const qc = useQueryClient();
+  const [side, setSide] = useState<'BUY' | 'SELL'>('BUY');
+  const [message, setMessage] = useState('');
+  const schema = z.object({
+    price: z.string().regex(/^\d+(\.\d+)?$/, 'Enter a valid decimal price'),
+    quantity: z.string().regex(/^\d+(\.\d+)?$/, 'Enter a valid decimal quantity'),
+  });
+  const {
+    register,
+    handleSubmit,
+    reset,
+    formState: { errors },
+  } = useForm({ resolver: zodResolver(schema) });
+  const m = useMutation({
+    mutationFn: (v: any) =>
+      endpoints.place({
+        portfolioId,
+        market: asset?.symbol || '',
+        price: v.price,
+        quantity: v.quantity,
+        side,
+      }),
+    onSuccess: () => {
+      setMessage('Order submitted');
+      reset();
+      qc.invalidateQueries({ queryKey: ['orders'] });
+    },
+    onError: (e) => setMessage(errorMessage(e)),
+  });
+  return (
+    <div className="panel ticket">
+      <div className="panel-title">
+        <span>Place order</span>
+        <span className="badge">LIMIT</span>
+      </div>
+      <div className="side-tabs">
+        <button className={side === 'BUY' ? 'buy selected' : ''} onClick={() => setSide('BUY')}>
+          Buy
+        </button>
+        <button className={side === 'SELL' ? 'sell selected' : ''} onClick={() => setSide('SELL')}>
+          Sell
+        </button>
+      </div>
+      <div className="order-context">
+        <span>Instrument</span>
+        <b>{asset?.symbol || 'Select a market'}</b>
+      </div>
+      <form onSubmit={handleSubmit((v) => m.mutate(v))}>
+        <Field label="Price" error={errors.price?.message}>
+          <div className="input-suffix">
+            <input inputMode="decimal" {...register('price')} placeholder="0.00" />
+            <span>USD</span>
+          </div>
+        </Field>
+        <Field label="Quantity" error={errors.quantity?.message}>
+          <div className="input-suffix">
+            <input inputMode="decimal" {...register('quantity')} placeholder="0.00000000" />
+            <span>{asset?.symbol?.split('/')[0] || 'BASE'}</span>
+          </div>
+        </Field>
+        <div className="estimate">
+          <span>Estimated value</span>
+          <b>—</b>
+        </div>
+        {message && (
+          <div className={message === 'Order submitted' ? 'success' : 'error'}>{message}</div>
+        )}
+        <button
+          className={side === 'BUY' ? 'buy-action' : 'sell-action'}
+          disabled={m.isPending || !asset || !portfolioId}
+        >
+          {m.isPending
+            ? 'Submitting…'
+            : `${side === 'BUY' ? 'Buy' : 'Sell'} ${asset?.symbol?.split('/')[0] || 'asset'}`}
+        </button>
+        {!portfolioId && (
+          <p className="hint">Create or select a portfolio before placing an order.</p>
+        )}
+      </form>
+    </div>
+  );
+}
+function OrdersPage() {
+  const q = useQuery({ queryKey: ['orders'], queryFn: endpoints.orders });
+  const qc = useQueryClient();
+  const cancel = useMutation({
+    mutationFn: endpoints.cancel,
+    onSuccess: () => qc.invalidateQueries({ queryKey: ['orders'] }),
+  });
+  return (
+    <div className="page-grid">
+      <section className="panel wide">
+        <div className="panel-title">
+          <span>Order history</span>
+          <div className="filters">
+            <button className="selected">All</button>
+            <button>Open</button>
+            <button>Filled</button>
+            <button>Canceled</button>
+          </div>
+        </div>
+        <OrdersTable
+          orders={q.data || []}
+          loading={q.isLoading}
+          onCancel={(id) => cancel.mutate(id)}
+        />
+      </section>
+      <section className="panel note">
+        <ShieldCheck size={20} />
+        <strong>Order lifecycle</strong>
+        <p>
+          Orders are persisted by Spring Boot before being sent to the C++ matching engine. Matching
+          is asynchronous, so status can remain OPEN briefly after submission.
+        </p>
+      </section>
+    </div>
+  );
+}
+function OrdersTable({
+  orders,
+  loading,
+  onCancel,
+}: {
+  orders: Order[];
+  loading: boolean;
+  onCancel?: (id: number) => void;
+}) {
+  if (loading) return <Skeleton />;
+  if (!orders.length)
+    return <Empty title="No orders yet" body="Your submitted orders will be listed here." />;
+  return (
+    <div className="table-scroll">
+      <table>
+        <thead>
+          <tr>
+            <th>Market</th>
+            <th>Side</th>
+            <th>Price</th>
+            <th>Quantity</th>
+            <th>Status</th>
+            <th>Created</th>
+            <th />
+          </tr>
+        </thead>
+        <tbody>
+          {orders.map((o) => (
+            <tr key={o.id}>
+              <td>
+                <b>
+                  {o.symbol}/{o.quoteSymbol}
+                </b>
+              </td>
+              <td>
+                <span className={o.side === 'BUY' ? 'positive' : 'negative'}>{o.side}</span>
+              </td>
+              <td className="numeric">{o.price}</td>
+              <td className="numeric">{o.quantity}</td>
+              <td>
+                <span className="status">{o.status}</span>
+              </td>
+              <td className="muted">{new Date(o.createdAt).toLocaleString()}</td>
+              <td>
+                {onCancel && ['OPEN', 'PARTIALLY_FILLED'].includes(o.status) && (
+                  <button className="text-button" onClick={() => onCancel(o.id)}>
+                    Cancel
+                  </button>
+                )}
+              </td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+  );
+}
+function PortfolioPage() {
+  const q = useQuery({ queryKey: ['portfolio'], queryFn: () => endpoints.portfolio() });
+  return (
+    <div className="page-grid">
+      <section className="panel balance-card">
+        <div className="eyebrow">DEFAULT PORTFOLIO</div>
+        <h1>
+          {q.isLoading ? '—' : money(q.data?.totalBalance)} <small>USD</small>
+        </h1>
+        <div className="balance-line">
+          <span>
+            <i className="green-dot" />
+            Available <b>{money(q.data?.availableBalance)}</b>
+          </span>
+          <span>
+            <i className="amber-dot" />
+            Locked <b>{money(q.data?.lockedBalance)}</b>
+          </span>
+        </div>
+      </section>
+      <section className="panel wide">
+        <div className="panel-title">
+          <span>Holdings</span>
+          <span className="live-pill">BACKEND DATA ONLY</span>
+        </div>
+        <Empty
+          title="Positions endpoint unavailable"
+          body="The current API exposes portfolio balances but not asset positions or valuation prices."
+        />
+      </section>
+    </div>
+  );
+}
+function Account() {
+  return (
+    <div className="page-grid">
+      <section className="panel account-card">
+        <div className="avatar large">MK</div>
+        <div>
+          <div className="eyebrow">ACCOUNT</div>
+          <h1>MiniExchange user</h1>
+          <p className="muted">JWT session is stored locally for this browser.</p>
+        </div>
+      </section>
+      <section className="panel note">
+        <Settings2 size={20} />
+        <strong>Preferences</strong>
+        <p>
+          Theme is fixed to the terminal dark theme. Profile update and refresh-token endpoints are
+          not exposed by the backend.
+        </p>
+      </section>
+    </div>
+  );
+}
+function AdminPage() {
+  const qc = useQueryClient();
+  const assets = useQuery({ queryKey: ['assets'], queryFn: endpoints.assets });
+  const [notice, setNotice] = useState('');
+  const schema = z.object({
+    symbol: z
+      .string()
+      .min(1)
+      .max(4)
+      .regex(/^[A-Za-z0-9]+$/),
+    name: z.string().min(1),
+    decimalPlaces: z.coerce.number().int().min(0).max(18),
+    isActive: z.boolean(),
+  });
+  const {
+    register,
+    handleSubmit,
+    reset,
+    formState: { errors },
+  } = useForm<any>({
+    resolver: zodResolver(schema),
+    defaultValues: { isActive: true, decimalPlaces: 8 },
+  });
+  const create = useMutation({
+    mutationFn: endpoints.createAsset,
+    onSuccess: () => {
+      setNotice('Asset created');
+      reset({ isActive: true, decimalPlaces: 8 });
+      qc.invalidateQueries({ queryKey: ['assets'] });
+    },
+    onError: (e) => setNotice(errorMessage(e)),
+  });
+  const update = useMutation({
+    mutationFn: ({ symbol, body }: { symbol: string; body: unknown }) =>
+      endpoints.updateAsset(symbol, body),
+    onSuccess: () => {
+      setNotice('Asset updated');
+      qc.invalidateQueries({ queryKey: ['assets'] });
+    },
+    onError: (e) => setNotice(errorMessage(e)),
+  });
+  return (
+    <div className="admin-grid">
+      <section className="admin-stats">
+        <div className="panel admin-stat">
+          <Server size={18} />
+          <span>API status</span>
+          <strong>Connected</strong>
+          <small>Protected endpoint reachable</small>
+        </div>
+        <div className="panel admin-stat">
+          <Database size={18} />
+          <span>Registered assets</span>
+          <strong>{assets.data?.length ?? '—'}</strong>
+          <small>From /api/assets</small>
+        </div>
+        <div className="panel admin-stat">
+          <Activity size={18} />
+          <span>Market telemetry</span>
+          <strong>Unavailable</strong>
+          <small>No monitoring endpoint exposed</small>
+        </div>
+      </section>
+      <section className="panel admin-form">
+        <div className="panel-title">
+          <span>Add asset</span>
+          <span className="badge">ADMIN ONLY</span>
+        </div>
+        <form onSubmit={handleSubmit((v) => create.mutate(v))}>
+          <div className="form-row">
+            <Field label="Symbol" error={errors.symbol?.message}>
+              <input {...register('symbol')} placeholder="BTC" />
+            </Field>
+            <Field label="Name" error={errors.name?.message}>
+              <input {...register('name')} placeholder="Bitcoin" />
+            </Field>
+          </div>
+          <div className="form-row">
+            <Field label="Decimal places" error={errors.decimalPlaces?.message}>
+              <input type="number" {...register('decimalPlaces')} placeholder="8" />
+            </Field>
+            <label className="check">
+              <input type="checkbox" {...register('isActive')} /> Active for trading
+            </label>
+          </div>
+          {notice && (
+            <div
+              className={
+                notice.includes('created') || notice.includes('updated') ? 'success' : 'error'
+              }
+            >
+              {notice}
+            </div>
+          )}
+          <button className="primary" disabled={create.isPending}>
+            <Plus size={16} />
+            {create.isPending ? 'Creating…' : 'Create asset'}
+          </button>
+        </form>
+      </section>
+      <section className="panel asset-list-admin">
+        <div className="panel-title">
+          <span>Asset registry</span>
+          <span className="live-pill">LIVE API DATA</span>
+        </div>
+        {assets.isLoading ? (
+          <Skeleton />
+        ) : !assets.data?.length ? (
+          <Empty title="No assets" body="Create the first tradable asset above." />
+        ) : (
+          <div className="table-scroll">
+            <table>
+              <thead>
+                <tr>
+                  <th>Symbol</th>
+                  <th>Name</th>
+                  <th>Precision</th>
+                  <th>Status</th>
+                  <th />
+                </tr>
+              </thead>
+              <tbody>
+                {assets.data.map((a) => (
+                  <tr key={a.assetUuid}>
+                    <td>
+                      <b>{a.symbol}</b>
+                    </td>
+                    <td>{a.name}</td>
+                    <td className="numeric">{a.decimalPlaces}</td>
+                    <td>
+                      <span className={a.isActive ? 'positive' : 'muted'}>
+                        {a.isActive ? 'ACTIVE' : 'INACTIVE'}
+                      </span>
+                    </td>
+                    <td>
+                      <button
+                        className="text-button"
+                        onClick={() =>
+                          update.mutate({
+                            symbol: a.symbol,
+                            body: {
+                              symbol: a.symbol,
+                              name: a.name,
+                              decimalPlaces: a.decimalPlaces,
+                              isActive: !a.isActive,
+                            },
+                          })
+                        }
+                      >
+                        {a.isActive ? 'Disable' : 'Enable'}
+                      </button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </section>
+      <section className="panel note">
+        <ShieldCheck size={20} />
+        <strong>Monitoring scope</strong>
+        <p>
+          The current backend does not expose admin metrics, user counts, trade volume, engine
+          health, audit logs, or website analytics. This dashboard monitors API reachability and the
+          asset registry without fabricating operational data.
+        </p>
+      </section>
+    </div>
+  );
+}
+function Empty({ title, body }: { title: string; body: string }) {
+  return (
+    <div className="empty">
+      <div className="empty-icon">
+        <PanelLeftClose size={18} />
+      </div>
+      <strong>{title}</strong>
+      <span>{body}</span>
+    </div>
+  );
+}
+function Skeleton() {
+  return (
+    <div className="skeleton">
+      <i />
+      <i />
+      <i />
+    </div>
+  );
+}
+export default function App() {
+  return (
+    <Routes>
+      <Route path="/login" element={<Auth />} />
+      <Route path="/register" element={<Auth signup />} />
+      <Route
+        path="/admin"
+        element={
+          <Protected>
+            <AdminProtected>
+              <AdminPage />
+            </AdminProtected>
+          </Protected>
+        }
+      />
+      <Route
+        path="*"
+        element={
+          <Protected>
+            <Shell />
+          </Protected>
+        }
+      />
+    </Routes>
+  );
+}

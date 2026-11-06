@@ -3,7 +3,9 @@ import { errorMessage } from './api';
 
 describe('API error handling', () => {
   it('prefers the backend message when one is returned', () => {
-    expect(errorMessage({ response: { data: { message: 'Insufficient balance' } } })).toBe('Insufficient balance');
+    expect(errorMessage({ response: { data: { message: 'Insufficient balance' } } })).toBe(
+      'Insufficient balance',
+    );
   });
 
   it('returns a safe fallback for unknown failures', () => {
